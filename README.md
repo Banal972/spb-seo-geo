@@ -64,20 +64,36 @@ You normally reach these through `/spbseo` rather than typing them. `setup` save
 - `apply` **previews by default.** Nothing changes without `--write`; existing files are backed up to `.bak`, and only the region inside the `# >>> spb-seo-geo` markers is touched.
 - `submit` notifies **Bing, Naver, Yandex and Seznam** over IndexNow. Google does not participate, so it never claims otherwise.
 
-## What gets checked (38 rules)
+## What gets checked (44 rules)
 
 | Group | Count | Covers |
 | --- | --- | --- |
 | CORE | 16 | robots.txt · sitemap · canonical · title/description · server-rendered body text · `lang` accuracy · Open Graph · IndexNow key |
 | GOOGLE | 7 | ownership · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API misuse |
 | BING | 3 | ownership · bingbot · registration (with the GSC-import shortcut) |
-| GEO | 7 | **citation bots allowed** · training-bot policy · user-triggered bots · text form · internal links · citation signals |
+| GEO | 13 | **citation bots allowed** · training policy · user-triggered bots · **actual crawler fetches from your access log** · policy violations · text form · internal links · headings · dates · entity markup · citation signals |
 | NAVER | 4 | **Yeti blocking** (checked for everyone) · ownership · RSS · console registration — the last three are optional advice, never failures |
 
 You are asked only whether to add **Naver** and **Yahoo**, by name. Google and Bing are never optional.
 | YAHOO | 1 | Yahoo! JAPAN's own `Y!J-*` crawlers (checked for everyone — allowing them is free) |
 
-35 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Korea, reported as notes and routed to `todo`.
+41 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Naver, reported as notes and routed to `todo`.
+
+### GEO is measured, not assumed
+
+Pass `--access-log <file>` (nginx, Apache, Cloudflare or Vercel exports, `.gz` fine) and you get the only hard evidence in GEO — whether AI crawlers actually fetch you:
+
+```
+AI crawler activity (last 30d, ./access.log)
+  citation        OAI-SearchBot 41 · Claude-SearchBot 12   (last 2026-09-27)   ← eligibility to be cited
+  user-triggered  ChatGPT-User 7   (last 2026-09-28)   ← people arriving through an AI product
+  training        GPTBot 88 · ClaudeBot 31
+  search          Googlebot 240 · bingbot 55
+```
+
+`citation none` means nothing can cite you however good the content is. Being *allowed* in robots.txt proves nothing on its own.
+
+What this deliberately does not do is query ChatGPT or Perplexity to see if your brand gets mentioned — that needs paid APIs or scraping, and samples one answer at one moment. Crawler evidence is deterministic, free, and closer to something you can act on.
 
 The two that fire most often:
 

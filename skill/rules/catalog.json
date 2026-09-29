@@ -632,6 +632,88 @@
       "evidence": "https://radar.cloudflare.com/bots/directory/yahoojapan",
       "grade": "secondary",
       "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-08",
+      "engine": "ai",
+      "severity": "warn",
+      "autofix": false,
+      "check": "aiCrawlerActivity",
+      "args": {
+        "family": "cite"
+      },
+      "problem": "AI citation crawlers have not actually fetched the site",
+      "action": "Allowing them in robots.txt is not enough — a page nobody fetched cannot be cited. Check that the site is reachable, linked to, and in a submitted sitemap. Pass --access-log to measure this",
+      "evidence": "https://platform.openai.com/docs/bots",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-09",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": false,
+      "check": "aiCrawlerActivity",
+      "args": {
+        "family": "user"
+      },
+      "problem": "no user-triggered AI fetches recorded",
+      "action": "These happen when a real person opens your link inside ChatGPT, Claude or Perplexity — the strongest evidence that AI answers are sending you traffic. Absence is not a defect, just a fact worth knowing",
+      "evidence": "https://platform.openai.com/docs/bots",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-10",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": false,
+      "check": "crawlerPolicyRespected",
+      "args": {},
+      "problem": "a crawler fetched paths it was disallowed from",
+      "action": "User-triggered fetchers may ignore robots.txt by design. For training or citation bots, a mismatch means your policy is not actually being honoured — block at the edge if it matters",
+      "evidence": "https://www.rfc-editor.org/rfc/rfc9309.html",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-11",
+      "engine": "ai",
+      "severity": "warn",
+      "autofix": false,
+      "check": "headingStructure",
+      "args": {},
+      "problem": "heading structure is broken (no h1, several h1s, or skipped levels)",
+      "action": "Retrieval systems chunk a page along its headings. One h1 and no level skips makes the passage boundaries unambiguous",
+      "evidence": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-12",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": false,
+      "check": "contentFreshness",
+      "args": {},
+      "problem": "pages expose no publication or modification date",
+      "action": "Expose a date via <time datetime> or datePublished/dateModified. Answer engines weigh recency, and an undated page is hard to cite with confidence",
+      "evidence": "https://developers.google.com/search/docs/appearance/publication-dates",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-13",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": false,
+      "check": "entityMarkup",
+      "args": {},
+      "problem": "no Organization or Person entity to attribute content to",
+      "action": "Add an Organization or Person in JSON-LD, with sameAs links to profiles that identify you. Google says schema is not required for AI features, but attribution needs an identifiable entity",
+      "evidence": "https://developers.google.com/search/docs/appearance/structured-data/organization",
+      "grade": "secondary",
+      "checked": "2026-09-29"
     }
   ]
 }

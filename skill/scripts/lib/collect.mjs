@@ -4,6 +4,7 @@ import { parseHtml } from './html.mjs';
 import { parseSitemap, parseFeed } from './xml.mjs';
 import { parseRobots } from './robots.mjs';
 import { enginesPhase1, enginesPhase2 } from './engines.mjs';
+import { analyze } from './accesslog.mjs';
 import { log } from './args.mjs';
 
 const FEED_PATHS = ['/rss', '/rss.xml', '/feed', '/feed.xml', '/atom.xml', '/index.xml'];
@@ -17,6 +18,14 @@ export async function collect({ url, config = {}, options = {} }) {
 
   const p1 = enginesPhase1({ option: options.engines, saved: config.engines, url: url || 'http://x.invalid' });
   facts.engines = p1;
+
+  // Access log first: it works with or without a URL, and it is the only deterministic
+  // evidence of whether AI crawlers actually reach the site.
+  if (options.accessLog) {
+    log('· reading access log');
+    facts.accessLog = analyze(String(options.accessLog), { window: Number(options.logWindow) || 30 });
+    if (!facts.accessLog.ok) log('! access log: ' + facts.accessLog.error);
+  }
 
   if (!url) { facts.remote = false; return facts; }
   facts.remote = true;

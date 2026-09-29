@@ -1,5 +1,6 @@
 // Rendering. stdout carries the report only. Passes as counts, failures as sentences.
 import { enginesSentence, LABEL as ENGINE_LABEL } from './engines.mjs';
+import { BOT_FAMILIES } from './accesslog.mjs';
 import { bySeverity } from './judge.mjs';
 import { isTTY } from './args.mjs';
 
@@ -19,6 +20,10 @@ export function renderScan(result, facts, opts = {}) {
   const es = enginesSentence(facts.engines);
   if (es.length) L.push(...es, '');
   L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked   ⏭ ${c.skipped} skipped` + (c.info ? `   · ${c.info} note` : ''), '');
+
+  // Crawler activity is the point even when it passes, so it gets its own block.
+  // A verdict alone ("fine") throws away the only hard evidence we have for GEO.
+  if (facts.accessLog?.ok) L.push(...crawlerBlock(facts.accessLog), '');
 
   const sorted = [...result.findings].sort(bySeverity);
   const fails = sorted.filter((f) => f.status === 'fail');
@@ -79,6 +84,24 @@ export function renderScan(result, facts, opts = {}) {
   if (!fixable && !manual) L.push('  submit       notify IndexNow about new content');
 
   return strip(L.join('\n'));
+}
+
+function crawlerBlock(log) {
+  const window = log.hasDates ? `last ${log.window}d` : 'whole file, undated';
+  const L = [`AI crawler activity (${window}, ${log.path})`];
+  const HINT = { cite: 'eligibility to be cited', user: 'people arriving through an AI product' };
+  for (const key of ['cite', 'user', 'train', 'search']) {
+    const fam = log.families[key] || [];
+    const label = BOT_FAMILIES[key].label.padEnd(16);
+    if (!fam.length) {
+      L.push(`  ${label}none` + (key === 'cite' ? '   ← nothing fetched you, so nothing can cite you' : ''));
+      continue;
+    }
+    const detail = fam.slice(0, 4).map((x) => `${x.ua} ${x.hits}`).join(' · ');
+    const last = fam.map((x) => x.last).filter(Boolean).sort().pop();
+    L.push(`  ${label}${detail}${last ? `   (last ${last})` : ''}` + (HINT[key] ? `   ← ${HINT[key]}` : ''));
+  }
+  return L;
 }
 
 function block(icon, f) {

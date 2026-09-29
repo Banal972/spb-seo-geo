@@ -13,7 +13,14 @@ export async function run(args) {
   const url = args.url ? String(args.url) : config.url || null;
   if (!url && !args.dir) log('! No URL given and none saved. Run setup first, or pass --url.');
 
-  const facts = await collect({ url, config, options: { engines: args.engines ?? args.market } });
+  const facts = await collect({
+    url, config,
+    options: {
+      engines: args.engines ?? args.market,
+      accessLog: args['access-log'] || config.accessLog,
+      logWindow: args['log-window'] || config.logWindow,
+    },
+  });
   facts.dir = root;
   facts.fw = fw;
   facts.framework = fw.name;

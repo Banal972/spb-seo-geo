@@ -4,6 +4,7 @@
 import { isAllowed, blocksEverything, hasExplicitGroup } from './robots.mjs';
 import { isValidLastmod } from './xml.mjs';
 import { scriptRatios, citationSignals as sig } from './html.mjs';
+import { BOT_FAMILIES } from './accesslog.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
@@ -279,6 +280,90 @@ export const checkers = {
     walk(f.dir);
     if (hits.length) return { ok: false, detail: `found in ${hits[0]}` };
     return { ok: true, detail: 'no such usage' };
+  },
+
+  // Did AI crawlers actually fetch the site? Being allowed proves nothing on its own.
+  aiCrawlerActivity(f, a) {
+    const log = f.accessLog;
+    if (!log) return UNKNOWN('no access log provided (--access-log <file>) — allowance alone does not prove anything was fetched');
+    if (!log.ok) return UNKNOWN(log.error);
+    const fam = log.families[a.family] || [];
+    const hits = fam.reduce((n, x) => n + x.hits, 0);
+    const window = log.hasDates ? `last ${log.window}d` : 'whole file (no parsable dates)';
+    if (!hits) {
+      return { ok: false, detail: `no ${BOT_FAMILIES[a.family].label} crawler fetches found (${window}). Checked: ${BOT_FAMILIES[a.family].uas.join(', ')}` };
+    }
+    const top = fam.slice(0, 3).map((x) => `${x.ua} ${x.hits}${x.last ? ` (last ${x.last})` : ''}`).join(' · ');
+    return { ok: true, detail: `${hits} fetches in ${window} — ${top}` };
+  },
+
+  // A bot fetching paths it was told to leave alone, or a policy that is not being honoured.
+  crawlerPolicyRespected(f) {
+    const log = f.accessLog;
+    if (!log) return UNKNOWN('no access log provided (--access-log <file>)');
+    if (!log.ok) return UNKNOWN(log.error);
+    if (!f.robots?.res?.ok) return UNKNOWN('no robots.txt to compare against');
+    const offenders = [];
+    for (const key of ['train', 'cite']) {
+      for (const rec of log.families[key] || []) {
+        const allowed = isAllowed(f.robots.parsed, rec.ua, '/').allowed;
+        if (!allowed && rec.hits > 0) offenders.push(`${rec.ua} fetched ${rec.hits}x while disallowed`);
+      }
+    }
+    if (offenders.length) return { ok: false, detail: offenders.join(' · ') };
+    return { ok: true, detail: 'no disallowed crawler activity found' };
+  },
+
+  // One H1 and a sensible hierarchy: retrieval systems chunk along headings.
+  headingStructure(f) {
+    const g = needRemote(f); if (g) return g;
+    const list = pages(f);
+    if (!list.length) return UNKNOWN('could not read the HTML');
+    const problems = [];
+    for (const p of list) {
+      const hs = p.parsed.headings;
+      const h1 = hs.filter((h) => h.level === 1).length;
+      if (h1 === 0) problems.push(`${p.url} has no h1`);
+      else if (h1 > 1) problems.push(`${p.url} has ${h1} h1 elements`);
+      const jumps = hs.some((h, i) => i > 0 && h.level - hs[i - 1].level > 1);
+      if (jumps) problems.push(`${p.url} skips a heading level`);
+    }
+    if (problems.length) return { ok: false, detail: problems.slice(0, 3).join(' · ') };
+    return { ok: true, detail: `${list.length} pages have a single h1 and no level skips` };
+  },
+
+  // Undated content is hard to trust and hard to cite.
+  contentFreshness(f) {
+    const g = needRemote(f); if (g) return g;
+    const list = pages(f);
+    if (!list.length) return UNKNOWN('could not read the HTML');
+    const undated = list.filter((p) => {
+      if (p.parsed.timeTags.length) return false;
+      const ld = p.parsed.jsonLd.join(' ');
+      return !/date(Published|Modified)/i.test(ld) && !p.parsed.meta['article:modified_time'];
+    });
+    if (undated.length === list.length) return { ok: false, detail: `none of ${list.length} sampled pages expose a date` };
+    if (undated.length) return { ok: false, detail: `${undated.length}/${list.length} pages expose no date — e.g. ${undated[0].url}` };
+    return { ok: true, detail: `${list.length} pages carry a date` };
+  },
+
+  // Who is this? Entity markup is how an answer engine attributes a claim to someone.
+  entityMarkup(f) {
+    const g = needRemote(f); if (g) return g;
+    const list = pages(f);
+    const blocks = list.flatMap((p) => p.parsed.jsonLd);
+    if (!blocks.length) return { ok: false, detail: 'no JSON-LD at all — no Organization or Person to attribute content to' };
+    let hasEntity = false, hasSameAs = false;
+    for (const b of blocks) {
+      try {
+        const j = JSON.parse(b);
+        const all = JSON.stringify(Array.isArray(j) ? j : [j]);
+        if (/"@type"\s*:\s*"?(Organization|Person|LocalBusiness|NewsMediaOrganization)/.test(all)) hasEntity = true;
+        if (/"sameAs"/.test(all)) hasSameAs = true;
+      } catch {}
+    }
+    if (!hasEntity) return { ok: false, detail: 'JSON-LD present but no Organization or Person entity' };
+    return { ok: true, detail: hasSameAs ? 'entity with sameAs links' : 'entity present (consider sameAs for disambiguation)' };
   },
 
   manual(f, a) {

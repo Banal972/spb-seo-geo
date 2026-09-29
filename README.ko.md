@@ -59,9 +59,23 @@ node <스킬>/scripts/submit.mjs --url https://example.kr --since HEAD~1
 - `apply` 는 **기본이 미리보기**입니다. `--write` 없이는 파일이 바뀌지 않고, 기존 파일은 `.bak` 으로 백업하며 `# >>> spb-seo-geo` 경계 주석 안쪽만 수정합니다.
 - `submit` 은 IndexNow 로 **Bing·네이버·Yandex·Seznam** 에 알립니다. 구글은 미참여이므로 보낸 척 하지 않습니다.
 
-## 검사 항목 (38개)
+## 검사 항목 (44개)
 
-35개는 어느 사이트에나 적용되는 판정이고, 나머지 3개는 한국용 콘솔 작업으로 참고 표시 후 `todo` 로 갑니다.
+41개는 어느 사이트에나 적용되는 판정이고, 나머지 3개는 네이버 콘솔 작업으로 참고 표시 후 `todo` 로 갑니다.
+
+### GEO 는 추측하지 않고 측정합니다
+
+`--access-log <파일>` 을 주면(nginx·Apache·Cloudflare·Vercel, `.gz` 가능) GEO 에서 유일한 실측 근거를 얻습니다 — **AI 크롤러가 실제로 우리 사이트를 가져갔는지**:
+
+```
+AI crawler activity (last 30d, ./access.log)
+  citation        OAI-SearchBot 41 · Claude-SearchBot 12   ← 인용될 자격
+  user-triggered  ChatGPT-User 7                          ← AI 안에서 실제로 들어온 사람
+  training        GPTBot 88 · ClaudeBot 31
+  search          Googlebot 240 · bingbot 55
+```
+
+`citation none` 이면 콘텐츠가 아무리 좋아도 인용될 수 없습니다. robots.txt 에서 **허용된 것만으로는 아무것도 증명되지 않습니다.**
 
 | 그룹 | 수 | 내용 |
 | --- | --- | --- |
@@ -70,7 +84,7 @@ node <스킬>/scripts/submit.mjs --url https://example.kr --since HEAD~1
 | NAVER | 4 | **Yeti 차단**(모두에게 검사) · 소유확인 · RSS · 콘솔 등록 — 뒤 3개는 선택 안내이고 실패로 뜨지 않습니다 |
 | YAHOO | 1 | Yahoo! JAPAN 자체 크롤러 `Y!J-*` (모두에게 검사 — 허용은 공짜) |
 | BING | 3 | 소유확인 · bingbot · 등록(GSC import 우회 안내) |
-| GEO | 7 | **인용 봇 허용** · 학습 봇 정책 · 사용자 트리거 봇 · 텍스트 형태 · 내부 링크 · 인용 신호 |
+| GEO | 13 | **인용 봇 허용** · 학습 봇 정책 · 사용자 트리거 봇 · **액세스 로그 기반 실제 크롤 여부** · 정책 위반 탐지 · 텍스트 형태 · 내부 링크 · 제목 구조 · 날짜 · 엔티티 마크업 · 인용 신호 |
 
 가장 자주 걸리는 두 가지:
 

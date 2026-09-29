@@ -23,6 +23,29 @@ Several vendors state that user-triggered fetchers may not strictly honour robot
 
 `open` is the default because this tool's goal is maximum visibility. **Blocking training is a value judgment, so the user must choose it explicitly.** When `closed` is selected, relay the warning that the site disappears from AI answers.
 
+## Measuring it, not guessing
+
+Pass `--access-log <file>` and the audit reports what actually happened rather than what is theoretically allowed:
+
+| Family | What it proves |
+| --- | --- |
+| `OAI-SearchBot` `Claude-SearchBot` `PerplexityBot` `Applebot` | **Eligibility.** A page nobody fetched cannot be cited, whatever robots.txt says (`GEO-08`) |
+| `ChatGPT-User` `Claude-User` `Perplexity-User` | **A real person opened your link inside an AI product** — the strongest evidence AI answers send traffic (`GEO-09`) |
+| `GPTBot` `ClaudeBot` `CCBot` `Google-Extended` … | Training only. Irrelevant to citation either way |
+| `Googlebot` `bingbot` `Yeti` `Y!J-` | Classic search, for comparison |
+
+`GEO-10` compares the log against robots.txt: a training or citation bot fetching paths it was disallowed from means the policy is not actually being honoured, and you need to block at the edge. User-triggered fetchers are expected to ignore robots.txt by design — that is not a violation.
+
+What this deliberately does **not** do: query ChatGPT or Perplexity to see whether the brand is mentioned. That needs paid APIs or scraping, and it samples one answer at one moment. Crawler evidence is deterministic, free, and closer to the thing you can act on.
+
+## Content structure (deterministic, so it is checked)
+
+| Rule | Why |
+| --- | --- |
+| `GEO-11` headings | Retrieval chunks a page along its headings. One `h1`, no skipped levels, unambiguous passage boundaries |
+| `GEO-12` dates | An undated page is hard to cite with confidence; answer engines weigh recency |
+| `GEO-13` entity | An answer attributes a claim to someone. `Organization`/`Person` with `sameAs` is how you become that someone. Google says schema is not *required* for AI features — attribution is a different problem from eligibility |
+
 ## Evidence grades — relay them as given
 
 | Action | Effect | Grade |

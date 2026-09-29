@@ -50,6 +50,12 @@ export function parseHtml(html = '') {
   const lists = (bodySrc.match(/<(ul|ol|table|dl)\b/gi) || []).length;
   const anchors = (bodySrc.match(/<a\b[^>]*>/gi) || []).map(attrs);
 
+  // Heading structure and dates: both feed retrieval, and both are deterministic.
+  const headings = [...bodySrc.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)]
+    .map((m) => ({ level: Number(m[1]), text: m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() }))
+    .filter((h) => h.text);
+  const timeTags = [...bodySrc.matchAll(/<time\b[^>]*datetime\s*=\s*["']([^"']+)["']/gi)].map((m) => m[1]);
+
   const jsonLd = [];
   const ldRe = /<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let ld;
@@ -62,7 +68,7 @@ export function parseHtml(html = '') {
     lang: (htmlTag.lang || '').toLowerCase(),
     title, meta, property, canonical, feeds, hreflangs,
     text, textLen: text.length, imgs, lists, anchors, jsonLd,
-    robotsMeta, hasDataNosnippet,
+    robotsMeta, hasDataNosnippet, headings, timeTags,
     scripts: (html.match(/<script\b[^>]*src\s*=\s*["']([^"']+)["']/gi) || []).join(' '),
   };
 }

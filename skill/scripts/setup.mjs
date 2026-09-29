@@ -21,6 +21,7 @@ if (args.help || (!args.url && !loadConfig(findRoot()).url)) {
     '  node setup.mjs --url https://example.com \\',
     '                 [--engines naver,yahoo|none] [--ai-policy open|cite-only|closed] \\',
     '                 [--google-token X] [--bing-token X] [--naver-token X] \\',
+    '                 [--access-log path/to/access.log] \\',
     '                 [--with-rss] [--with-llms-txt] [--write]',
     '',
     'Ask the user for these first (see SKILL.md → Intake). Everything is saved to',
@@ -41,6 +42,7 @@ if (engines) patch.engines = engines.join(',') || 'none';
 if (args['ai-policy']) patch.aiPolicy = String(args['ai-policy']);
 if (args['with-rss']) patch.withRss = true;
 if (args['with-llms-txt']) patch.withLlmsTxt = true;
+if (args['access-log']) patch.accessLog = String(args['access-log']);
 
 // Verification tokens end up in the page source anyway, so storing them is safe and
 // means apply can place the tags on every later run without asking again.
@@ -59,6 +61,7 @@ L.push(`  site        ${cfg.url}`);
 L.push(`  engines     ${cfg.engines || 'not chosen — every optional engine step will be listed'}`);
 L.push(`  ai-policy   ${cfg.aiPolicy || 'open (default)'}`);
 L.push(`  tokens      ${['google', 'bing', 'naver'].filter((k) => cfg.tokens?.[k]).join(', ') || 'none yet'}`);
+if (cfg.accessLog) L.push(`  access log  ${cfg.accessLog}`);
 const extras = [cfg.withRss && 'rss', cfg.withLlmsTxt && 'llms.txt'].filter(Boolean);
 if (extras.length) L.push(`  also build  ${extras.join(', ')}`);
 out(L.join('\n'));
