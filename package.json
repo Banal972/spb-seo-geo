@@ -29,7 +29,7 @@
   "bugs": {
     "url": "https://github.com/Banal972/spb-seo-geo/issues"
   },
-  "author": "SPBABO",
+  "author": "SPBABO <spbabo972@gmail.com>",
   "license": "MIT",
   "type": "module",
   "bin": {
