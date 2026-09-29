@@ -144,16 +144,33 @@ export const checkers = {
     return { ok: true };
   },
 
-  titleDescription(f) {
+  titlePresent(f) {
     const g = needRemote(f); if (g) return g;
     const list = pages(f);
     if (!list.length) return UNKNOWN('could not read the HTML');
-    const missing = list.filter((p) => !p.parsed.title || !p.parsed.meta['description']);
-    const titles = list.map((p) => p.parsed.title).filter(Boolean);
+    const missing = list.filter((p) => !p.parsed.title);
+    if (missing.length) return { ok: false, detail: `${missing.length}/${list.length} pages have no title — e.g. ${missing[0].url}` };
+    const titles = list.map((p) => p.parsed.title);
     const dup = titles.length - new Set(titles).size;
-    if (missing.length) return { ok: false, detail: `${missing.length} pages missing a title or description` };
-    if (dup > 0) return { ok: false, detail: `${dup} duplicate titles` };
-    return { ok: true, detail: `${list.length} pages unique` };
+    if (dup > 0) {
+      const seen = new Map();
+      for (const p of list) seen.set(p.parsed.title, (seen.get(p.parsed.title) || 0) + 1);
+      const worst = [...seen.entries()].sort((a, b) => b[1] - a[1])[0];
+      return { ok: false, detail: `${dup} duplicate titles — "${worst[0].slice(0, 40)}" appears ${worst[1]}x` };
+    }
+    return { ok: true, detail: `${list.length} pages have distinct titles` };
+  },
+
+  descriptionPresent(f) {
+    const g = needRemote(f); if (g) return g;
+    const list = pages(f);
+    if (!list.length) return UNKNOWN('could not read the HTML');
+    const missing = list.filter((p) => !p.parsed.meta['description']);
+    if (missing.length) return { ok: false, detail: `${missing.length}/${list.length} pages have no meta description` };
+    const descs = list.map((p) => p.parsed.meta['description']);
+    const dup = descs.length - new Set(descs).size;
+    if (dup > 0) return { ok: false, detail: `${dup} pages share the same description` };
+    return { ok: true, detail: `${list.length} pages have distinct descriptions` };
   },
 
   llmsTxt(f) {

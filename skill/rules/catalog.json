@@ -69,9 +69,9 @@
         "maxUrls": 50000,
         "maxBytes": 52428800
       },
-      "problem": "sitemap exceeds 50,000 URLs or 50MB uncompressed",
+      "problem": "a single sitemap exceeds 50,000 URLs or 50MB uncompressed",
       "action": "Split it using a sitemap index",
-      "evidence": "https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap",
       "grade": "primary",
       "checked": "2026-09-29",
       "scope": [
@@ -131,16 +131,16 @@
     {
       "id": "CORE-08",
       "engine": "core",
-      "severity": "warn",
+      "severity": "info",
       "autofix": false,
       "check": "homeRedirectChain",
       "args": {
-        "max": 1
+        "max": 3
       },
-      "problem": "home page is not a 200, or redirects twice or more",
-      "action": "Reduce the redirect chain to at most one hop",
-      "evidence": "https://developers.google.com/search/docs/crawling-indexing/301-redirects",
-      "grade": "primary",
+      "problem": "the home page takes several redirect hops to arrive",
+      "action": "Google's crawlers follow up to 10 hops by default, so a short chain is not a failure — but every hop is latency for users and one more place for the canonical signal to be rewritten. Collapse them to a single hop where you can",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/http-network-errors",
+      "grade": "secondary",
       "checked": "2026-09-29",
       "scope": [
         "seo",
@@ -154,8 +154,8 @@
       "autofix": false,
       "check": "canonicalSelf",
       "args": {},
-      "problem": "canonical is missing or does not point at the page itself",
-      "action": "Add a self-referencing canonical on the canonical host",
+      "problem": "no self-referencing canonical",
+      "action": "Add a self-referencing canonical on the canonical page. Google states a canonical is not required — \"your site will likely do just fine without specifying a canonical preference\" — but lists the self-referential link under best practices, and it removes the ambiguity for good",
       "evidence": "https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls",
       "grade": "primary",
       "checked": "2026-09-29",
@@ -168,10 +168,10 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "check": "titleDescription",
+      "check": "titlePresent",
       "args": {},
-      "problem": "title or meta description is missing, or duplicated across sampled pages",
-      "action": "Write a unique title and description per page",
+      "problem": "a title is missing, or repeated across pages",
+      "action": "Write a distinct title per page. Google: \"It's important to have distinct text that describes the content of the page in the <title> element for each page on your site\"",
       "evidence": "https://developers.google.com/search/docs/appearance/title-link",
       "grade": "primary",
       "checked": "2026-09-29",
@@ -862,6 +862,22 @@
         "seo",
         "geo"
       ]
+    },
+    {
+      "id": "CORE-18",
+      "engine": "core",
+      "severity": "info",
+      "autofix": false,
+      "scope": [
+        "seo"
+      ],
+      "check": "descriptionPresent",
+      "args": {},
+      "problem": "a meta description is missing, or repeated across pages",
+      "action": "Write one per page. It is not a ranking factor — Google generates snippets from the page when the description is missing or unhelpful — but a good one is what people read before deciding to click",
+      "evidence": "https://developers.google.com/search/docs/appearance/snippet",
+      "grade": "primary",
+      "checked": "2026-09-29"
     }
   ]
 }

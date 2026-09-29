@@ -61,7 +61,7 @@ test('--only splits the catalog and says nothing is lost silently', () => {
   const { rules } = loadCatalog();
   const seo = partitionByScope(rules, 'seo');
   const geo = partitionByScope(rules, 'geo');
-  assert.equal(seo.active.length, 30);
+  assert.equal(seo.active.length, 31);
   assert.equal(geo.active.length, 24);
   assert.equal(seo.active.length + seo.skipped.length, rules.length);
   // Infrastructure that gates both must appear in both
