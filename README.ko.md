@@ -120,11 +120,16 @@ AI crawler activity (last 30d, ./access.log)
 실사이트 3곳(Next.js 모노레포 · 마케팅 사이트 · Vite SPA)에서 확인했습니다.
 
 - **네이버 IndexNow 가 실제로 동작합니다** — 그리고 테스트하기 전까지는 동작하지 않았습니다. 요청에 `keyLocation` 이 실려 있어 네이버가 모든 제출에 422 를 반환하고 있었고, 지금은 양쪽 모두 200 입니다.
-- **Claude Code 밖에서도 동작합니다** — Codex 가 스킬을 찾아 번들 스크립트를 실행하고 리포트를 옮깁니다.
+- **Claude Code 밖에서도 동작합니다** — Codex CLI 가 `.agents/skills` 에서 스킬을 찾아 번들 스크립트를 실행하고 리포트를 옮깁니다. 사이트 2개짜리 모노레포 포함. 여기까지 오는 데 설치 버그 2개를 고쳐야 했습니다 — `~/.codex/prompts/` 는 Codex 0.159 에서 없어진 디렉터리였고, 애초에 **Codex 엔 스킬별 슬래시 커맨드가 없습니다.**
 - **결정성 유지** — 같은 사이트를 두 번 검사하면 판정 집합이 동일합니다.
 - **모든 인용 URL 이 응답**하고, 핵심 규칙은 인용 페이지를 다시 읽어 주장과 대조했습니다. 근거가 뒷받침하지 않던 규칙 4개를 정정·분리했습니다.
 
-아직 열린 것: 저가 모델(DeepSeek·Kimi 등)이 `SKILL.md` 를 따르는지 · 한글 20%/가나 5% 임계값은 측정이 아니라 판단 · Antigravity 등은 경로만 맞춰뒀고 실행은 안 해봤습니다.
+아직 열린 것:
+
+- 저가 모델(DeepSeek·Kimi 등)이 `SKILL.md` 를 따르는지 — Codex 가 소형 모델을 못 골라서 미검증
+- 한글 20% / 가나 5% 임계값은 측정이 아니라 판단입니다
+- **Gemini CLI**: `.toml` 커맨드와 `.agents/skills` 경로를 설치된 CLI 의 번들 문서와 대조했지만, `/spbseo` 를 실제로 쳐보지는 않았습니다
+- **Antigravity·Cursor 등**: 경로 규약만 맞춰뒀고 아무것도 실행해보지 않았습니다. Codex 건에서 **문서화된 커맨드 파일이 없어진 디렉터리를 가리키고 있었던** 걸 겪은 뒤로는, 경로 규약은 누가 직접 쳐보기 전까지 추측으로 취급합니다
 
 ## 잔소리하지 않습니다
 
@@ -143,18 +148,11 @@ AI crawler activity (last 30d, ./access.log)
 ## 개발
 
 ```bash
-npm test              # 40개
+npm test              # 127개
 npm run lint:rules    # 근거·등급 없는 규칙을 거부
 ```
 
-설계 문서와 의사결정 기록(D1~D14)은 `PLAN.md` 와 `../ai-reasearch/10-Projects/08-spb-seo-geo/` 에 있습니다.
-
-## 아직 검증되지 않은 것
-
-- Codex·Antigravity 에서 번들 스크립트 실행 (Claude Code 만 확인)
-- 네이버 IndexNow 엔드포인트 실제 응답 (키 파일이 배포된 사이트가 필요)
-- 저가 모델(DeepSeek·Kimi 등)이 SKILL.md 지시를 지키는지
-- 한글 비중 임계값 20% — 근거 없는 감이고 조정이 필요합니다
+설계 문서와 의사결정 기록(D1~D29)은 `PLAN.md` 와 `../ai-reasearch/10-Projects/08-spb-seo-geo/` 에 있습니다.
 
 ## 라이선스
 

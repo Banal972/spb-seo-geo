@@ -40,8 +40,11 @@ const AGENTS = [
     key: 'gemini', label: 'Gemini CLI',
     detect: () => existsSync(join(HOME, '.gemini')) || existsSync(join(CWD, '.gemini')),
     skill: (s) => (s === 'global' ? join(HOME, '.agents', 'skills', NAME) : join(CWD, '.agents', 'skills', NAME)),
+    // Gemini reads both: .agents/skills for the skill, .gemini/commands for the command.
+    // Its user-skill alias really is ~/.agents/skills, not only ~/.gemini/skills.
     command: (s) => (s === 'global' ? join(HOME, '.gemini', 'commands', `${NAME}.toml`) : join(CWD, '.gemini', 'commands', `${NAME}.toml`)),
     template: 'gemini.toml',
+    invoke: '/spbseo   (or /skills reload, then just ask)',
   },
   {
     key: 'antigravity', label: 'Antigravity',

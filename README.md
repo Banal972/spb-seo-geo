@@ -155,8 +155,10 @@ Checked against three live sites (a Next.js monorepo, a marketing site, a Vite S
 - **Naver IndexNow really works** — and did not, until this was tested. Naver returned
   422 for every submission because the request carried `keyLocation`; both endpoints now
   return 200. If you used an earlier build, nothing you submitted reached Naver.
-- **Runs outside Claude Code** — Codex discovers the skill, executes the bundled script
-  and relays the report. Antigravity is wired the same way but has not been run.
+- **Runs outside Claude Code** — Codex CLI discovers the skill from `.agents/skills`,
+  executes the bundled script and relays the report, including a monorepo with two sites.
+  Getting there took fixing an install that wrote to `~/.codex/prompts/`, a directory
+  Codex removed in 0.159 — and learning that Codex has no per-skill slash command at all.
 - **Determinism holds** — the same site twice yields an identical verdict set.
 - **Every citation resolves**, and the load-bearing ones were re-read against the claim
   they support. Four rules were corrected or split because their source did not say what
@@ -169,8 +171,12 @@ Still open:
   output should not vary — but discovery and obedience might.
 - The 20% Hangul / 5% kana thresholds for suggesting a regional engine are judgement
   calls, not measurements.
-- Antigravity, Cursor and the rest are wired by path convention; only Claude Code and
-  Codex have actually been run.
+- **Gemini CLI**: the `.toml` command and the `.agents/skills` path were checked against
+  the installed CLI's own bundled documentation, but `/spbseo` has not been typed there.
+- **Antigravity, Cursor and the rest** are wired by path convention only. Nothing has
+  been run in them. After the Codex case — where the documented command file turned out
+  to target a directory that no longer exists — treat a path convention as a guess until
+  someone types the command.
 
 ## License
 
