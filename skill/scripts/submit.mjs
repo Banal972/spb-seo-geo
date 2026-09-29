@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // IndexNow batch submission. Google does not participate, so never pretend we notified it.
-import { parseArgs, out, log, EXIT } from './lib/args.mjs';
+import { parseArgs, readPositionals, out, log, EXIT } from './lib/args.mjs';
 import { findRoot, loadConfig } from './lib/config.mjs';
 import { ENDPOINTS, BATCH, payload, chunk as chunkUrls } from './lib/indexnow.mjs';
 import { execSync } from 'node:child_process';
@@ -10,6 +10,7 @@ import { join } from 'node:path';
 const DEDUPE_HOURS = 24;
 
 const args = parseArgs();
+readPositionals(args);
 const root = args.dir ? String(args.dir) : findRoot();
 const config = loadConfig(root);
 const site = String(args.url || config.url || '');

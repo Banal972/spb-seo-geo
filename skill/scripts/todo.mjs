@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Work only a human can do. Non-autofixable items, in dependency order.
-import { parseArgs, out, log, EXIT } from './lib/args.mjs';
+import { parseArgs, readPositionals, out, log, EXIT } from './lib/args.mjs';
 import { run } from './lib/run.mjs';
 
 const ENGINE_ORDER = ['google', 'bing', 'core', 'ai', 'naver', 'yahoo'];
@@ -10,6 +10,7 @@ const OPT_NOTE = { naver: 'do these in order or they will not take effect' };
 const DONE_HINT = 'Already done any of these? Silence it with --done <ID>';
 
 const args = parseArgs();
+readPositionals(args);
 
 try {
   const { facts, result } = await run(args);

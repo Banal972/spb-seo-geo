@@ -4,9 +4,10 @@ prompt = """
 Follow the instructions in {{SKILL_DIR}}/SKILL.md. Do not read the site's HTML, robots.txt
 or sitemap yourself — relay only the output of the command below, in plain language.
 
-!{node {{SKILL_DIR}}/scripts/scan.mjs --url {{args}}}
+!{node {{SKILL_DIR}}/scripts/scan.mjs {{args}}}
 
-If the argument is empty, ask the user for the deployed URL.
+The command takes no arguments by default: it reads the site address out of the project.
+Ask the user for an address only if the output says it could not find one.
 Never pass --write to apply without approval.
 If the script is missing, tell the user to reinstall with `npx spb-seo-geo`.
 """

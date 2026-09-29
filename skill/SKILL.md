@@ -19,47 +19,43 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 - Do not volunteer timelines, caveats or background nobody asked for.
 - Do not order someone to register with a console: `GOOGLE-07`, `BING-03`, `NAVER-04` are unverifiable from outside — say "if you have not yet", then `--done <ID>` once they confirm.
 
-## Auditing needs nothing; configuring needs answers
-
-Only want to know how the site is doing? Run `scan` — no questions, every rule still runs.
-The intake exists because this tool also **writes**, and each question decides what:
-
-| Question | Decides |
-| --- | --- |
-| verification tokens | whether we place the ownership tag or just tell you to fetch it |
-| AI training policy | what goes into robots.txt |
-| access log | whether crawler activity is measured at all |
-| RSS / llms.txt | whether those files get generated |
-
-A question that changes neither what is written nor what is evaluated does not belong —
-that test is what removed the engine questions.
-
-## The intake — one question at a time
+## Start here — no questions
 
 ```
-node <DIR>/scripts/intake.mjs
+node <DIR>/scripts/scan.mjs
 ```
 
-It prints what is known, what is unanswered, and **the tradeoff for each choice**. Ask one at a time and wait — never as a form, never answering for them, **always give the cost with the option**, and treat "skip" as a fine answer. `references/choices.md` has the evidence if they dig.
+That is the whole first step. It finds the site URL in the project (framework config,
+`package.json` `homepage`, `public/CNAME`, `.env*`, an existing sitemap or robots.txt) and
+audits the live site against 45 rules. Ask for the URL only if it was not found, and only
+pick between sites if this is a monorepo holding several — `intake.mjs` lists them.
 
-Order: **which site** (a monorepo holds several — never pick one yourself), address, then the four above. The address is usually already in the project, so that one is just a confirmation. Anything saved is skipped — a first-run conversation, not a recurring one.
+Whatever the user typed after `/spbseo` goes straight on the end — `seo`, `geo` and a bare
+address are all understood, and an unrecognised word says so rather than being ignored.
 
-Save the answers in one `setup` call (intake prints it); show the file preview before writing.
+Report the failures in plain language, then offer to fix the ones marked autofixable.
 
-Later runs need no flags:
+## Then fix, asking only what a fix needs
 
 ```
-node <DIR>/scripts/scan.mjs   [--only seo|geo] [--verbose] [--json]
-node <DIR>/scripts/apply.mjs  [--write]
-node <DIR>/scripts/todo.mjs
+node <DIR>/scripts/apply.mjs            preview — changes nothing
+node <DIR>/scripts/apply.mjs --write    after they approve the preview
+node <DIR>/scripts/todo.mjs             what only a human can do, with links
 node <DIR>/scripts/submit.mjs [--since HEAD~1]
 ```
 
-`--only seo` (30) · `--only geo` (24) · default both (44); what it leaves out is stated. Needs Node 20+ — if missing, say so and stop.
+**Do not interview them up front.** Each of these is asked only when it is the thing
+standing between them and a fix, and "skip" is always a fine answer:
 
-## Order of work
+| Ask, when it comes up | Because |
+| --- | --- |
+| the "HTML tag" string from a console | otherwise the ownership tag becomes a to-do instead of being placed |
+| may AI companies learn from your content? | `apply` writes robots.txt as allow-everything by default; `--ai-policy=cite-only` blocks training but keeps you quotable, and Google ranking is identical either way |
+| does this site publish posts regularly? | if so `--with-rss` is worth it, mainly for Naver |
+| is there a server log file? | `--access-log` turns GEO from "allowed" into measured. Most people do not have one |
 
-`intake` → ask one at a time → `setup` (preview) → on approval `setup --write` → relay `todo` → after they deploy, `scan` again → on new pages, `submit`.
+Answers are saved to `.spb-seo-geo.json`, so nothing is asked twice. `intake.mjs` prints
+what is still unanswered if you want to offer more.
 
 ## Language
 

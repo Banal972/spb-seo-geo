@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Autofix. Preview by default: nothing is written without --write (invariant 3).
-import { parseArgs, out, log, EXIT } from './lib/args.mjs';
+import { parseArgs, readPositionals, out, log, EXIT } from './lib/args.mjs';
 import { run } from './lib/run.mjs';
 import { saveConfig } from './lib/config.mjs';
 import { scanRoutes } from './lib/framework.mjs';
@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync } from
 import { join, dirname } from 'node:path';
 
 const args = parseArgs();
+readPositionals(args);
 const WRITE = !!args.write;
 
 try {

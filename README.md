@@ -4,7 +4,7 @@ English · **[한국어](./README.ko.md)**
 
 An **agent skill that audits and configures a site's search and AI visibility** — Google Search Console, Bing Webmaster Tools, Naver Search Advisor, Yahoo! JAPAN, plus AI answer citation (GEO/AEO) — in one pass.
 
-It infers what it can, asks only for what unlocks something, configures everything it can reach, and hands you only the steps that genuinely require a human.
+Point it at a project and it audits the live site, fixes what can be fixed in code, and hands you only the steps that genuinely require a human. **You are not interviewed first** — it reads the site address out of your project and starts.
 
 ```
 npx spb-seo-geo     # install: pick only the harnesses you use, 2 questions
@@ -13,23 +13,27 @@ npx spb-seo-geo     # install: pick only the harnesses you use, 2 questions
 /spbseo geo         # AI citation only
 ```
 
-On the first run it walks you through a short intake — **one question at a time**: the
-site address (usually already detected from your project, so it just asks you to
-confirm), whether to cover Naver and Yahoo, your AI training policy, any verification
-tokens you have, and an access log if there is one. Every answer is saved to
-`.spb-seo-geo.json`, so later runs need no flags at all.
+No setup, no flags, no account. The site address comes from your framework config,
+`package.json`, `public/CNAME`, `.env*` or an existing sitemap — you are asked for it only
+if none of those have it.
+
+A question appears only when it is the one thing standing between you and a fix: a
+verification token you already hold (so the tag gets placed instead of listed), whether AI
+companies may train on your content (robots.txt is written allow-everything otherwise),
+and whether the site publishes posts regularly (worth an RSS feed, mostly for Naver).
+Every answer is saved to `.spb-seo-geo.json` and never asked again.
 
 ## What makes it different
 
 | | |
 | --- | --- |
 | **Code makes the verdict, not the model** | The agent never reads your HTML, robots.txt or sitemap. One audit costs about as many tokens as reading a single report, and the same site always yields the **same result** — even if you swap the model underneath. |
-| **Asks, then finishes the job** | The intake is a conversation, not a form: one question at a time, and anything already in your project (the site URL, an access log) becomes a confirmation rather than an open question. Nothing is asked twice. |
+| **Nothing to configure** | Run it and it works. Anything discoverable from your project — the site URL, the framework, a monorepo's apps, an access log, an IndexNow key already committed — is discovered, never asked. Questions arrive one at a time, only when an answer changes what gets written, and "skip" is always fine. |
 | **Finishes the job instead of listing it** | Ask for the verification tokens up front and the tool can place them, instead of printing "add this yourself". For frameworks that own `<head>`, it emits the form you can actually paste — a Next.js `metadata.verification` object, not a raw `<meta>` tag. |
 | **Optional work is optional, never a failure** | Every rule runs for every site, because allowing a crawler costs nothing. Only work that needs a console account is optional, and it lands in `todo` under "Optional engines" — a site that ignores Naver never sees a Naver *failure*. Signals (`100% Hangul`, `.jp domain`) are shown as a suggestion, not a gate. |
 | **Yahoo, described honestly** | Yahoo has no index of its own: **Yahoo! JAPAN runs on Google's**, and Yahoo elsewhere runs on **Bing**. So "optimise for Yahoo" is not a real task, and inventing a Yahoo rule group would mean rules with no evidence. Japan adds exactly one real check (Yahoo! JAPAN's own `Y!J-*` crawlers) plus a note pointing at the Google findings. |
-| **No rule without evidence** | All 37 rules carry an evidence URL and a grade (primary = official docs, secondary = research/measurement, low = correlation only). A rule missing either is **not even loaded**. |
-| **No score** | There is no defensible way to weight 37 rules into a number, so we don't. You get counts and severities. |
+| **No rule without evidence** | All 45 rules carry an evidence URL and a grade (primary = official docs, secondary = research/measurement, low = correlation only). A rule missing either is **not even loaded**. |
+| **No score** | There is no defensible way to weight 45 rules into a number, so we don't. You get counts and severities. |
 | **"I don't know" stays "I don't know"** | An unverifiable check (`?`) is never rounded up to a pass, and a rule skipped by market (`⏭`) is never silently hidden. |
 
 ## Install
@@ -56,35 +60,36 @@ npx spb-seo-geo --list-agents
 ## Commands
 
 ```bash
-node <skill>/scripts/setup.mjs  --url https://example.com [--market kr,jp|global] [--ai-policy open|cite-only|closed] \
-                                [--google-token X] [--bing-token X] [--naver-token X] [--with-rss] [--write]
-node <skill>/scripts/scan.mjs   [--verbose] [--json]
+node <skill>/scripts/scan.mjs   [--only seo|geo] [--verbose] [--json]     # no arguments needed
 node <skill>/scripts/apply.mjs  [--write]
 node <skill>/scripts/todo.mjs
 node <skill>/scripts/submit.mjs [--since HEAD~1]
+
+node <skill>/scripts/setup.mjs  [--url https://example.com] [--engines naver,yahoo|none] \
+                                [--ai-policy open|cite-only|closed] [--with-rss] \
+                                [--google-token X] [--bing-token X] [--naver-token X] [--write]
+node <skill>/scripts/intake.mjs                                           # what is still unanswered
 ```
 
-You normally reach these through `/spbseo` rather than typing them. `setup` saves your answers and then runs the audit, the file preview and the todo list in one pass. Requires Node 20+.
+You normally reach these through `/spbseo` rather than typing them. `scan` needs nothing — everything else is there for when you want to hand it an answer it could not infer. Requires Node 20+.
 
 - `apply` **previews by default.** Nothing changes without `--write`; existing files are backed up to `.bak`, and only the region inside the `# >>> spb-seo-geo` markers is touched.
 - `submit` notifies **Bing, Naver, Yandex and Seznam** over IndexNow. Google does not participate, so it never claims otherwise.
 
-## What gets checked (44 rules)
+## What gets checked (45 rules)
 
 | Group | Count | Covers |
 | --- | --- | --- |
-| CORE | 17 | robots.txt · sitemap · canonical · title/description · server-rendered body text · `lang` accuracy · Open Graph · IndexNow key |
+| CORE | 18 | robots.txt · sitemap · canonical · title/description · server-rendered body text · `lang` accuracy · Open Graph · IndexNow key |
 | GOOGLE | 7 | ownership · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API misuse |
 | BING | 3 | ownership · bingbot · registration (with the GSC-import shortcut) |
 | GEO | 12 | **citation bots allowed** · training policy · user-triggered bots · **actual crawler fetches from your access log** · policy violations · text form · internal links · headings · dates · entity markup · citation signals |
 | NAVER | 4 | **Yeti blocking** (checked for everyone) · ownership · RSS · console registration — the last three are optional advice, never failures |
-
-You are asked only whether to add **Naver** and **Yahoo**, by name. Google and Bing are never optional.
 | YAHOO | 1 | Yahoo! JAPAN's own `Y!J-*` crawlers (checked for everyone — allowing them is free) |
 
-Every rule carries a `scope`, so `--only seo` (30 rules) and `--only geo` (24) are real splits rather than guesses — infrastructure that gates both (robots, sitemap, indexability, server-rendered text) appears in both.
+Every rule carries a `scope`, so `--only seo` (31 rules) and `--only geo` (24) are real splits rather than guesses — infrastructure that gates both (robots, sitemap, indexability, server-rendered text) appears in both.
 
-41 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Naver, reported as notes and routed to `todo`.
+Every rule runs for every site — allowing a crawler is free everywhere. Only the steps that need a console account (Naver, Yahoo! JAPAN) are optional, and those are reported as notes and routed to `todo`, never as failures.
 
 ### GEO is measured, not assumed
 

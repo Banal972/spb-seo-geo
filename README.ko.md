@@ -5,7 +5,7 @@
 사이트의 **검색·AI 노출 세팅을 점검하고 자동 구성하는 에이전트 스킬**입니다.
 구글 서치콘솔 · 빙 웹마스터 · 네이버 서치어드바이저 · Yahoo! JAPAN + AI 답변 인용(GEO)까지 한 번에 봅니다.
 
-추론할 수 없는 것 — 사이트 URL, **네이버·Yahoo 를 추가할지**, 콘솔 소유확인 토큰 — 을 **처음에 한 번 받고**, 그 답을 기준으로 전부 세팅한 뒤, 정말로 사람이 해야 하는 것만 넘겨줍니다.
+프로젝트에서 실행하면 배포된 사이트를 점검하고, 코드로 고칠 수 있는 건 고치고, 정말로 사람이 해야 하는 것만 넘겨줍니다. **먼저 인터뷰하지 않습니다** — 사이트 주소는 프로젝트에서 직접 찾아내고 바로 시작합니다.
 
 ```
 npx spb-seo-geo     # 설치 — 쓰는 하네스만 골라서, 질문 2개
@@ -14,17 +14,20 @@ npx spb-seo-geo     # 설치 — 쓰는 하네스만 골라서, 질문 2개
 /spbseo geo         # AI 인용만
 ```
 
-첫 실행에서는 짧은 인테이크를 **하나씩** 물어봅니다 — 사이트 주소(대개 프로젝트에서 이미 찾아내므로 확인만 하면 됩니다), 네이버·Yahoo 를 챌지, AI 학습 정책, 가지고 있는 소유확인 토큰, 액세스 로그. 모든 답은 `.spb-seo-geo.json` 에 저장되어 **이후 실행은 플래그가 필요 없습니다.**
+세팅도, 플래그도, 계정도 필요 없습니다. 사이트 주소는 프레임워크 설정 · `package.json` · `public/CNAME` · `.env*` · 이미 있는 sitemap 에서 찾아내고, 거기 없을 때만 물어봅니다.
+
+질문은 **그 답이 있어야 뭔가를 고칠 수 있을 때만** 나옵니다 — 이미 가지고 있는 소유확인 토큰(있으면 태그를 넣어주고, 없으면 할 일 목록으로 갑니다), AI 학습을 허용할지(기본값은 전부 허용으로 robots.txt 를 씁니다), 글이 정기적으로 올라오는지(그렇다면 RSS 가 값을 합니다 — 주로 네이버). 답은 `.spb-seo-geo.json` 에 저장되고 두 번 묻지 않습니다.
 
 ## 무엇이 다른가
 
 | | |
 | --- | --- |
 | **판정을 코드가 한다** | 에이전트는 사이트 HTML·robots.txt·sitemap 을 읽지 않습니다. 1회 점검에 드는 토큰이 리포트 한 장 값이고, 같은 사이트는 **항상 같은 결과**가 나옵니다. 모델이 바뀌어도 그대로입니다. |
+| **설정할 게 없습니다** | 그냥 실행하면 됩니다. 프로젝트에서 알아낼 수 있는 것 — 사이트 URL, 프레임워크, 모노레포의 앱 목록, 액세스 로그, 이미 커밋된 IndexNow 키 — 은 전부 알아서 찾고 묻지 않습니다. 질문은 답이 결과를 바꿀 때만, 하나씩 나오고, "모르겠다"도 정상적인 답입니다. |
 | **목록만 주지 않고 끝까지 합니다** | 소유확인 토큰을 처음에 받아두면 태그까지 넣어줍니다. "직접 넣으세요" 로 떠넘기지 않습니다. `<head>` 를 프레임워크가 소유하는 경우엔 **붙여넣을 수 있는 형태**로 줍니다 — Next.js 면 생 `<meta>` 가 아니라 `metadata.verification` 객체. |
 | **선택 작업은 선택이고, 실패가 아닙니다** | 모든 규칙은 모든 사이트에서 돕니다. 지역 크롤러를 허용하는 건 어디서나 공짜니까요. 콘솔 계정이 필요한 작업만 지역용이고, 그건 `todo` 의 "선택" 항목으로 갑니다 — 한국을 안 노리는 사이트에 **네이버 실패가 뜨는 일이 없습니다.** 신호(`한글 100%`, `.jp 도메인`)는 게이트가 아니라 넛지입니다. |
 | **Yahoo 는 사실대로 설명합니다** | Yahoo 는 자체 인덱스가 없습니다. **Yahoo! JAPAN 은 구글 인덱스**, 그 외 Yahoo 는 **빙**입니다. 즉 "Yahoo 최적화" 라는 작업은 존재하지 않고, Yahoo 규칙 그룹을 만들면 근거 없는 규칙이 됩니다. 일본은 실제 검사 1개(Yahoo! JAPAN 자체 크롤러 `Y!J-*`)와 구글 결과를 가리키는 안내 1개만 추가합니다. |
-| **근거 없는 규칙은 넣지 않는다** | 37개 규칙 전부에 근거 URL 과 등급(1차 공식문서 / 2차 연구 / 낮음 상관관계)이 붙어 있습니다. 없는 규칙은 로드조차 되지 않습니다. |
+| **근거 없는 규칙은 넣지 않는다** | 45개 규칙 전부에 근거 URL 과 등급(1차 공식문서 / 2차 연구 / 낮음 상관관계)이 붙어 있습니다. 없는 규칙은 로드조차 되지 않습니다. |
 | **점수가 없다** | 가중치의 근거를 만들 수 없으니 만들지 않습니다. 통과·경고·실패 개수와 심각도만 보여줍니다. |
 | **모르는 건 모른다고 한다** | 확인 못 한 항목(`?`)을 통과로 반올림하지 않고, 조건에 안 맞아 건너뛴 항목(`⏭`)도 숨기지 않습니다. |
 
@@ -52,20 +55,25 @@ npx spb-seo-geo --list-agents
 ## 명령
 
 ```bash
-node <스킬>/scripts/scan.mjs   --url https://example.kr [--market auto|kr|global] [--verbose] [--json]
-node <스킬>/scripts/apply.mjs  --url https://example.kr [--write] [--ai-policy open|cite-only|closed]
-node <스킬>/scripts/todo.mjs   --url https://example.kr
-node <스킬>/scripts/submit.mjs --url https://example.kr --since HEAD~1
+node <스킬>/scripts/scan.mjs   [--only seo|geo] [--verbose] [--json]      # 인자 없이 그냥 실행
+node <스킬>/scripts/apply.mjs  [--write]
+node <스킬>/scripts/todo.mjs
+node <스킬>/scripts/submit.mjs [--since HEAD~1]
+
+node <스킬>/scripts/setup.mjs  [--url https://example.kr] [--engines naver,yahoo|none] \
+                               [--ai-policy open|cite-only|closed] [--with-rss] \
+                               [--google-token X] [--bing-token X] [--naver-token X] [--write]
+node <스킬>/scripts/intake.mjs                                            # 아직 답 안 한 것 목록
 ```
 
-보통은 직접 치지 않고 `/spbseo` 로 부릅니다. Node 20+ 가 필요합니다.
+보통은 직접 치지 않고 `/spbseo` 로 부릅니다. `scan` 은 아무것도 안 줘도 돌아가고, 나머지는 추론이 안 되는 답을 직접 넘겨주고 싶을 때만 씁니다. Node 20+ 가 필요합니다.
 
 - `apply` 는 **기본이 미리보기**입니다. `--write` 없이는 파일이 바뀌지 않고, 기존 파일은 `.bak` 으로 백업하며 `# >>> spb-seo-geo` 경계 주석 안쪽만 수정합니다.
 - `submit` 은 IndexNow 로 **Bing·네이버·Yandex·Seznam** 에 알립니다. 구글은 미참여이므로 보낸 척 하지 않습니다.
 
-## 검사 항목 (44개)
+## 검사 항목 (45개)
 
-41개는 어느 사이트에나 적용되는 판정이고, 나머지 3개는 네이버 콘솔 작업으로 참고 표시 후 `todo` 로 갑니다.
+모든 규칙이 모든 사이트에서 돕니다 — 크롤러를 허용하는 건 어디서나 공짜니까요. 콘솔 계정이 필요한 작업(네이버·Yahoo! JAPAN)만 선택이고, 그건 실패가 아니라 참고 표시 후 `todo` 로 갑니다. `--only seo` 는 31개, `--only geo` 는 24개이고, 양쪽을 다 좌우하는 인프라(robots·사이트맵·색인 가능 여부·초기 HTML 본문)는 양쪽에 다 들어갑니다.
 
 ### GEO 는 추측하지 않고 측정합니다
 
@@ -83,7 +91,7 @@ AI crawler activity (last 30d, ./access.log)
 
 | 그룹 | 수 | 내용 |
 | --- | --- | --- |
-| CORE | 17 | robots.txt · 사이트맵 · canonical · title/description · 초기 HTML 본문 · `lang` 일치 · 오픈그래프 · IndexNow 키 |
+| CORE | 18 | robots.txt · 사이트맵 · canonical · title/description · 초기 HTML 본문 · `lang` 일치 · 오픈그래프 · IndexNow 키 |
 | GOOGLE | 7 | 소유확인 · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API 오용 |
 | NAVER | 4 | **Yeti 차단**(모두에게 검사) · 소유확인 · RSS · 콘솔 등록 — 뒤 3개는 선택 안내이고 실패로 뜨지 않습니다 |
 | YAHOO | 1 | Yahoo! JAPAN 자체 크롤러 `Y!J-*` (모두에게 검사 — 허용은 공짜) |
