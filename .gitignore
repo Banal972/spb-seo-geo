@@ -1,0 +1,4 @@
+node_modules/
+.spb-seo-geo/
+*.bak
+.DS_Store

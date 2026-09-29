@@ -1,0 +1,12 @@
+description = "Audit and configure search + AI visibility (SEO/GEO)"
+
+prompt = """
+Follow the instructions in {{SKILL_DIR}}/SKILL.md. Do not read the site's HTML, robots.txt
+or sitemap yourself — relay only the output of the command below, in plain language.
+
+!{node {{SKILL_DIR}}/scripts/scan.mjs --url {{args}}}
+
+If the argument is empty, ask the user for the deployed URL.
+Never pass --write to apply without approval.
+If the script is missing, tell the user to reinstall with `npx spb-seo-geo`.
+"""

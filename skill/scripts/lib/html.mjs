@@ -1,0 +1,89 @@
+// Zero-dependency policy means a regex-based <head> extractor instead of a real parser.
+// Limits: weak against tags inside comments and malformed nesting. Use only for <head> meta/link extraction.
+
+const headOf = (html) => {
+  const m = /<head[^>]*>([\s\S]*?)<\/head>/i.exec(html);
+  return m ? m[1] : html.slice(0, 40000);
+};
+
+function attrs(tag) {
+  const out = {};
+  const re = /([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+))/g;
+  let m;
+  while ((m = re.exec(tag))) out[m[1].toLowerCase()] = m[3] ?? m[4] ?? m[5] ?? '';
+  return out;
+}
+
+const tags = (src, name) => (src.match(new RegExp(`<${name}\\b[^>]*>`, 'gi')) || []).map(attrs);
+
+export function parseHtml(html = '') {
+  const head = headOf(html);
+  const metas = tags(head, 'meta');
+  const links = tags(head, 'link');
+  const htmlTag = attrs((/<html\b[^>]*>/i.exec(html) || [''])[0]);
+
+  const meta = {};      // name -> content
+  const property = {};  // property -> content
+  for (const m of metas) {
+    if (m.name) meta[m.name.toLowerCase()] = m.content ?? '';
+    if (m.property) property[m.property.toLowerCase()] = m.content ?? '';
+  }
+
+  const title = (/<title[^>]*>([\s\S]*?)<\/title>/i.exec(head)?.[1] || '').trim();
+
+  const canonical = links.find((l) => (l.rel || '').toLowerCase().includes('canonical'))?.href || null;
+  const feeds = links
+    .filter((l) => /alternate/i.test(l.rel || '') && /(rss|atom)\+xml/i.test(l.type || ''))
+    .map((l) => l.href);
+  const hreflangs = links
+    .filter((l) => (l.rel || '').toLowerCase() === 'alternate' && l.hreflang)
+    .map((l) => l.hreflang.toLowerCase());
+
+  // Body text: drop script/style/noscript, then strip tags
+  const bodySrc = (/<body[^>]*>([\s\S]*)<\/body>/i.exec(html)?.[1] || html);
+  const stripped = bodySrc
+    .replace(/<(script|style|noscript|template|svg)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  const text = stripped.replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+
+  const imgs = (bodySrc.match(/<img\b/gi) || []).length;
+  const lists = (bodySrc.match(/<(ul|ol|table|dl)\b/gi) || []).length;
+  const anchors = (bodySrc.match(/<a\b[^>]*>/gi) || []).map(attrs);
+
+  const jsonLd = [];
+  const ldRe = /<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let ld;
+  while ((ld = ldRe.exec(html))) jsonLd.push(ld[1]);
+
+  const robotsMeta = [meta['robots'], meta['googlebot']].filter(Boolean).join(',').toLowerCase();
+  const hasDataNosnippet = /\sdata-nosnippet\b/i.test(html);
+
+  return {
+    lang: (htmlTag.lang || '').toLowerCase(),
+    title, meta, property, canonical, feeds, hreflangs,
+    text, textLen: text.length, imgs, lists, anchors, jsonLd,
+    robotsMeta, hasDataNosnippet,
+    scripts: (html.match(/<script\b[^>]*src\s*=\s*["']([^"']+)["']/gi) || []).join(' '),
+  };
+}
+
+// Hangul character ratio. The most reliable signal in market detection.
+export function hangulRatio(text = '') {
+  const letters = text.replace(/[^\p{L}\p{N}]/gu, '');
+  if (!letters.length) return 0;
+  const hangul = letters.match(/[가-힣ᄀ-ᇿ㄰-㆏]/g) || [];
+  return hangul.length / letters.length;
+}
+
+// Citation signals: statistics, quotations, outbound links (GEO-06)
+export function citationSignals(page) {
+  const numbers = (page.text.match(/\b\d+([.,]\d+)?\s*(%|명|개|건|원|억|만|배|초|분|시간|년|월|일|kg|km|ms|USD|\$)/g) || []).length;
+  const quotes = (page.text.match(/[“"”][^“"”]{20,}[“"”]/g) || []).length;
+  let host = '';
+  try { host = new URL(page.url).host; } catch {}
+  const external = page.anchors.filter((a) => {
+    if (!a.href) return false;
+    try { return new URL(a.href, page.url).host !== host; } catch { return false; }
+  }).length;
+  return { numbers, quotes, external };
+}

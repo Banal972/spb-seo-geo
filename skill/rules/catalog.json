@@ -1,0 +1,650 @@
+{
+  "version": "0.1.0",
+  "updated": "2026-09-29",
+  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification.",
+  "rules": [
+    {
+      "id": "CORE-01",
+      "engine": "core",
+      "severity": "critical",
+      "autofix": true,
+      "market": "all",
+      "check": "urlOk",
+      "args": {
+        "path": "/robots.txt",
+        "notHtml": true
+      },
+      "fix": "robots",
+      "problem": "robots.txt is missing or does not respond correctly",
+      "action": "Serve robots.txt as text/plain. If it returns HTML, crawlers cannot parse it",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/robots/create-robots-txt",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-02",
+      "engine": "core",
+      "severity": "critical",
+      "autofix": false,
+      "market": "all",
+      "check": "robotsNotBlockingAll",
+      "args": {},
+      "problem": "robots.txt is blocking the entire site",
+      "action": "Remove Disallow: /. If that is intentional, search visibility is impossible",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/robots/robots_txt",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-03",
+      "engine": "core",
+      "severity": "critical",
+      "autofix": true,
+      "market": "all",
+      "check": "sitemapDeclared",
+      "args": {},
+      "fix": "sitemap",
+      "problem": "no sitemap, or it is not declared in robots.txt",
+      "action": "Generate sitemap.xml and add one Sitemap: line to robots.txt. This is the discovery path Naver recommends",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-04",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "sitemapLimits",
+      "args": {
+        "maxUrls": 50000,
+        "maxBytes": 52428800
+      },
+      "problem": "sitemap exceeds 50,000 URLs or 50MB uncompressed",
+      "action": "Split it using a sitemap index",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/sitemaps/large-sitemaps",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-05",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "sitemapAbsoluteSameHost",
+      "args": {},
+      "problem": "sitemap contains relative URLs or URLs on another host (www/non-www, http/https mixed)",
+      "action": "Use absolute URLs on one canonical host",
+      "evidence": "https://www.sitemaps.org/protocol.html",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-06",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "sitemapSampleHealthy",
+      "args": {},
+      "problem": "sitemap contains 404, redirecting or noindex URLs",
+      "action": "Remove them. A sitemap should list only indexable pages",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-07",
+      "engine": "core",
+      "severity": "info",
+      "autofix": true,
+      "market": "all",
+      "check": "sitemapLastmod",
+      "args": {},
+      "fix": "sitemap",
+      "problem": "sitemap entries have no lastmod, or the format is invalid",
+      "action": "Emit lastmod in W3C Datetime format. Crawlers use it to prioritise recrawls",
+      "evidence": "https://www.sitemaps.org/protocol.html",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-08",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "homeRedirectChain",
+      "args": {
+        "max": 1
+      },
+      "problem": "home page is not a 200, or redirects twice or more",
+      "action": "Reduce the redirect chain to at most one hop",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/301-redirects",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-09",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "canonicalSelf",
+      "args": {},
+      "problem": "canonical is missing or does not point at the page itself",
+      "action": "Add a self-referencing canonical on the canonical host",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-10",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "titleDescription",
+      "args": {},
+      "problem": "title or meta description is missing, or duplicated across sampled pages",
+      "action": "Write a unique title and description per page",
+      "evidence": "https://developers.google.com/search/docs/appearance/title-link",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-11",
+      "engine": "core",
+      "severity": "info",
+      "autofix": true,
+      "market": "all",
+      "check": "llmsTxt",
+      "args": {},
+      "fix": "llmstxt",
+      "optIn": true,
+      "problem": "llms.txt is absent (which is not a problem)",
+      "action": "Optional. Google states it is unnecessary for AI features and measured traffic is near zero. Use --with-llms-txt if you want it for agent-readable docs",
+      "evidence": "https://developers.google.com/search/docs/appearance/ai-features",
+      "grade": "low",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-12",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "textRendered",
+      "args": {
+        "minChars": 500
+      },
+      "problem": "the initial HTML has almost no body text (JavaScript-rendered)",
+      "action": "Serve the body in the initial HTML via SSR or SSG. Crawlers and AI citation both read text",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-13",
+      "engine": "core",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "internalLinksOk",
+      "args": {},
+      "problem": "some internal links from the home page return 4xx or 5xx",
+      "action": "Fix the broken links",
+      "evidence": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-14",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "langMatchesContent",
+      "args": {},
+      "problem": "<html lang> does not match the actual content language",
+      "action": "Correct the lang attribute. It affects SEO, accessibility and market detection alike",
+      "evidence": "https://developers.google.com/search/docs/specialty/international/localized-versions",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-15",
+      "engine": "core",
+      "severity": "info",
+      "autofix": true,
+      "market": "all",
+      "check": "metaPresent",
+      "args": {
+        "properties": [
+          "og:title",
+          "og:description",
+          "og:image"
+        ]
+      },
+      "fix": "meta-og",
+      "problem": "Open Graph tags are missing",
+      "action": "Add og:title, og:description and og:image. These drive link previews in Slack, KakaoTalk, X and Facebook, not just Naver",
+      "evidence": "https://ogp.me/",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-16",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": true,
+      "market": "all",
+      "check": "indexNowKey",
+      "args": {},
+      "fix": "indexnow-key",
+      "problem": "IndexNow key file is missing",
+      "action": "Place the key file at the site root. It lets you notify Bing, Naver, Yandex and Seznam instantly (Google does not participate)",
+      "evidence": "https://www.indexnow.org/documentation",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-01",
+      "engine": "google",
+      "severity": "warn",
+      "autofix": true,
+      "market": "all",
+      "check": "metaPresent",
+      "args": {
+        "names": [
+          "google-site-verification"
+        ],
+        "unknownIfMissing": true,
+        "reason": "ownership may already be verified by the HTML file method"
+      },
+      "fix": "meta-verify-google",
+      "problem": "google-site-verification meta tag is absent",
+      "action": "Pass the token from Search Console as --google-token and we will emit the tag. Ignore this if you already verified by file or DNS",
+      "evidence": "https://support.google.com/webmasters/answer/9008080",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-02",
+      "engine": "google",
+      "severity": "critical",
+      "autofix": false,
+      "market": "all",
+      "check": "noindexAbsent",
+      "args": {},
+      "problem": "noindex is applied (meta or X-Robots-Tag)",
+      "action": "Remove it unless intentional. A noindex page is excluded from both search and AI answers",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/block-indexing",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-03",
+      "engine": "google",
+      "severity": "critical",
+      "autofix": false,
+      "market": "all",
+      "check": "snippetControlsAbsent",
+      "args": {},
+      "problem": "nosnippet or max-snippet is suppressing snippets",
+      "action": "Remove it. Google's documentation makes AI Overviews and AI Mode citation conditional on being eligible to show with a snippet, so this blocks AI citation outright",
+      "evidence": "https://developers.google.com/search/docs/appearance/ai-features",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-04",
+      "engine": "google",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "botPolicyInfo",
+      "args": {
+        "ua": "Google-Extended"
+      },
+      "problem": "Google-Extended policy status",
+      "action": "Blocking it has no effect on Google Search indexing (it only covers Gemini and Vertex training). Just confirm it matches your intent",
+      "evidence": "https://developers.google.com/search/docs/crawling-indexing/overview-google-crawlers",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-05",
+      "engine": "google",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "jsonLdValid",
+      "args": {},
+      "problem": "JSON-LD structured data has a parse error",
+      "action": "Fix the syntax. This is for rich results; Google states it is not required for AI Overviews",
+      "evidence": "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-06",
+      "engine": "google",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "localGrep",
+      "args": {
+        "pattern": "indexing\\.googleapis\\.com"
+      },
+      "problem": "the Indexing API may be in use for ordinary pages",
+      "action": "The Indexing API officially covers JobPosting and BroadcastEvent only. Ordinary pages belong in your sitemap with internal links",
+      "evidence": "https://developers.google.com/search/apis/indexing-api/v3/quickstart",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GOOGLE-07",
+      "engine": "google",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "manual",
+      "args": {
+        "todo": [
+          {
+            "label": "Add the property in Search Console and submit the sitemap",
+            "url": "https://search.google.com/search-console",
+            "minutes": 10
+          }
+        ]
+      },
+      "problem": "Search Console registration and sitemap submission cannot be checked from outside",
+      "action": "Check it in the console yourself",
+      "evidence": "https://support.google.com/webmasters/answer/9008080",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "NAVER-01",
+      "engine": "naver",
+      "severity": "warn",
+      "autofix": true,
+      "market": "kr",
+      "check": "metaPresent",
+      "args": {
+        "names": [
+          "naver-site-verification"
+        ],
+        "unknownIfMissing": true,
+        "reason": "ownership may already be verified by the HTML file method, and that filename cannot be guessed"
+      },
+      "fix": "meta-verify-naver",
+      "problem": "naver-site-verification meta tag is absent",
+      "action": "Pass the token from Search Advisor as --naver-token and we will place it in <head>. Ignore this if you already verified with the HTML file method",
+      "evidence": "https://searchadvisor.naver.com/guide",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "NAVER-02",
+      "engine": "naver",
+      "severity": "critical",
+      "autofix": false,
+      "market": "kr",
+      "check": "robotsAllows",
+      "args": {
+        "uas": [
+          "Yeti"
+        ]
+      },
+      "problem": "Naver's crawler Yeti is blocked in robots.txt",
+      "action": "Unblock Yeti. While blocked the site cannot appear in Naver search or AI Briefing at all",
+      "evidence": "https://searchadvisor.naver.com/guide/seo-basic-robots",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "NAVER-03",
+      "engine": "naver",
+      "severity": "warn",
+      "autofix": true,
+      "market": "kr",
+      "check": "rssPresent",
+      "args": {},
+      "fix": "rss",
+      "problem": "no RSS feed",
+      "action": "Generate one. RSS is nearly meaningless to Google and Bing, but Naver still treats it as a first-class input",
+      "evidence": "https://searchadvisor.naver.com/guide",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "NAVER-04",
+      "engine": "naver",
+      "severity": "info",
+      "autofix": false,
+      "market": "kr",
+      "check": "manual",
+      "args": {
+        "todo": [
+          {
+            "label": "Register the site and verify ownership",
+            "url": "https://searchadvisor.naver.com",
+            "minutes": 5,
+            "note": "if the meta tag is already in place, you only need to press Verify in the console"
+          },
+          {
+            "label": "Submit the RSS feed",
+            "url": "https://searchadvisor.naver.com",
+            "minutes": 2,
+            "note": "Request > RSS submission"
+          },
+          {
+            "label": "Submit the sitemap",
+            "url": "https://searchadvisor.naver.com",
+            "minutes": 2,
+            "note": "indexing takes about two weeks; not appearing during that window is normal"
+          }
+        ]
+      },
+      "problem": "Search Advisor registration, RSS and sitemap submission cannot be verified",
+      "action": "There is no public API. Do it in the console in order: ownership, then RSS, then sitemap",
+      "evidence": "https://searchadvisor.naver.com/guide",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "BING-01",
+      "engine": "bing",
+      "severity": "warn",
+      "autofix": true,
+      "market": "all",
+      "check": "metaPresent",
+      "args": {
+        "names": [
+          "msvalidate.01"
+        ],
+        "orPaths": [
+          "/BingSiteAuth.xml"
+        ],
+        "unknownIfMissing": true,
+        "reason": "ownership may already be verified via DNS"
+      },
+      "fix": "meta-verify-bing",
+      "problem": "no Bing ownership signal (msvalidate.01 or BingSiteAuth.xml)",
+      "action": "Pass --bing-token to emit the tag, or import the site from Google Search Console in one step",
+      "evidence": "https://www.bing.com/webmasters/help/how-to-verify-ownership-of-your-site-afcfefc6",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "BING-02",
+      "engine": "bing",
+      "severity": "critical",
+      "autofix": false,
+      "market": "all",
+      "check": "robotsAllows",
+      "args": {
+        "uas": [
+          "bingbot"
+        ]
+      },
+      "problem": "bingbot is blocked in robots.txt",
+      "action": "Unblock it. Bing's index also backs other AI search products, so the impact does not stop at Bing",
+      "evidence": "https://www.bing.com/webmasters/help/which-crawlers-does-bing-use-8c184ec0",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "BING-03",
+      "engine": "bing",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "manual",
+      "args": {
+        "todo": [
+          {
+            "label": "Register with Bing Webmaster Tools",
+            "url": "https://www.bing.com/webmasters",
+            "minutes": 1,
+            "note": "importing the site from Google Search Console takes about a minute"
+          }
+        ]
+      },
+      "problem": "Bing Webmaster registration cannot be checked from outside",
+      "action": "Importing from Search Console is the fastest route",
+      "evidence": "https://www.bing.com/webmasters",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-01",
+      "engine": "ai",
+      "severity": "critical",
+      "autofix": true,
+      "market": "all",
+      "check": "robotsAllows",
+      "args": {
+        "uas": [
+          "OAI-SearchBot",
+          "Claude-SearchBot",
+          "PerplexityBot"
+        ]
+      },
+      "fix": "robots",
+      "problem": "AI citation crawlers are blocked in robots.txt",
+      "action": "Training bots (GPTBot, ClaudeBot) and citation bots (OAI-SearchBot, Claude-SearchBot, PerplexityBot) are separate tokens. Blocking the citation bots removes you from AI answers entirely",
+      "evidence": "https://platform.openai.com/docs/bots",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-02",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": true,
+      "market": "all",
+      "check": "trainingPolicy",
+      "args": {
+        "uas": [
+          "GPTBot",
+          "ClaudeBot",
+          "Google-Extended",
+          "Applebot-Extended",
+          "CCBot",
+          "meta-externalagent",
+          "Bytespider"
+        ]
+      },
+      "fix": "robots",
+      "problem": "training crawler policy differs from the selected preset",
+      "action": "State your intent with --ai-policy=open|cite-only|closed. The default open maximises visibility; blocking training should be an explicit choice",
+      "evidence": "https://darkvisitors.com/agents",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-03",
+      "engine": "ai",
+      "severity": "warn",
+      "autofix": true,
+      "market": "all",
+      "check": "robotsAllows",
+      "args": {
+        "uas": [
+          "ChatGPT-User",
+          "Claude-User",
+          "Perplexity-User"
+        ]
+      },
+      "fix": "robots",
+      "problem": "user-triggered crawlers are blocked",
+      "action": "These are live fetches made when a person opens your link inside an AI product. Blocking them means users cannot open your page there",
+      "evidence": "https://platform.openai.com/docs/bots",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-04",
+      "engine": "ai",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "textNotBuriedInImages",
+      "args": {
+        "minTextPerImage": 80
+      },
+      "problem": "body content is buried in images (too little text per image)",
+      "action": "Provide the substance as text. Google's AI features guidance recommends keeping content in textual form",
+      "evidence": "https://developers.google.com/search/docs/appearance/ai-features",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-05",
+      "engine": "ai",
+      "severity": "warn",
+      "autofix": false,
+      "market": "all",
+      "check": "orphanPages",
+      "args": {},
+      "problem": "some sitemap pages are unreachable from the home page by internal links",
+      "action": "Add internal links. Google's AI features guidance explicitly recommends making content findable through internal links",
+      "evidence": "https://developers.google.com/search/docs/appearance/ai-features",
+      "grade": "primary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-06",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "citationSignals",
+      "args": {},
+      "problem": "few statistics, quotations or outbound citations",
+      "action": "Princeton's GEO study reported citation likelihood lifts of about +41% for quotations, +32% for statistics and +30% for inline citations. Those were interventions, not mere correlation, but results vary by domain and query",
+      "evidence": "https://arxiv.org/abs/2311.09735",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "GEO-07",
+      "engine": "ai",
+      "severity": "info",
+      "autofix": false,
+      "market": "all",
+      "check": "structuredElements",
+      "args": {},
+      "problem": "no structured elements such as lists or tables",
+      "action": "Informational only. Many AI-cited pages use lists, but that is correlation, not causation",
+      "evidence": "https://arxiv.org/abs/2311.09735",
+      "grade": "low",
+      "checked": "2026-09-29"
+    }
+  ]
+}
