@@ -36,14 +36,7 @@ Each of these buys a concrete capability. Ask when you reach it, not up front �
 | `--ai-policy open\|cite-only\|closed` | only if they care about AI training; `open` is the default |
 | `--engines naver,yahoo\|none` | only to hide optional console advice; nothing is gated on it |
 
-Save answers once so later runs need no flags:
-
-```
-node <DIR>/scripts/setup.mjs [--url X] [--google-token X] [--bing-token X] [--naver-token X] \
-     [--access-log path] [--ai-policy …] [--engines …] [--with-rss] [--with-llms-txt] [--write]
-```
-
-`setup` saves, then runs scan + apply preview + todo in one pass.
+Save answers once with `setup` (same flags, plus `--url`), which then runs scan + apply preview + todo in one pass.
 
 ```
 apply.mjs  [--write]          configure files
@@ -57,7 +50,7 @@ Needs Node 20+; if missing, say so in one line and stop.
 
 1. **`scan`** with no flags. Show the failures; say where the URL came from.
 2. **`apply`** to preview, then `apply --write` on approval.
-3. Relay **`todo`**: required console steps first, then optional engines. Keep the order and the ~2-week Naver delay as given.
+3. Relay **`todo`** as given: required steps first, optional engines after.
 4. After they deploy, **`scan`** again against the live site.
 5. On new pages, **`submit`**. Google does not participate in IndexNow — never claim otherwise.
 
@@ -84,7 +77,7 @@ Exit codes: `0` clear · `1` critical · `2` warnings · `3` error
 
 ## Optional engines
 
-Every rule runs for every site — allowing a crawler costs nothing, so nothing is gated. Only console work is optional, and `todo` prints it under "Optional engines", including the full answer for Yahoo (short version: nothing to register — Yahoo! JAPAN runs on Google's index). Relay what `todo` says rather than improvising.
+Nothing is gated — allowing a crawler is free. Only console work is optional, and `todo` prints it under "Optional engines", including the Yahoo answer (nothing to register: Yahoo! JAPAN runs on Google's index). Relay what `todo` says rather than improvising.
 
 ## Read only when you need detail
 
@@ -92,13 +85,13 @@ Every rule runs for every site — allowing a crawler costs nothing, so nothing 
 
 ## GEO is measured, not assumed
 
-With an access log the report prints an **AI crawler activity** block: which citation bots fetched the site and when, plus whether a real person arrived through an AI product (`ChatGPT-User` and friends — the strongest evidence there is). Relay that block; it is the hardest data in the report. `citation none` means nothing can cite the site however good the content is — lead with it.
+With an access log the report prints an **AI crawler activity** block: which citation bots fetched the site, and whether a real person arrived through an AI product. Relay it — it is the hardest data in the report. `citation none` means nothing can cite the site however good the content is; lead with that.
 
 ## Do not nag
 
-- Console registration (`GOOGLE-07`, `BING-03`, `NAVER-04`) **cannot be checked from outside** — the user may well have done it already. Phrase it as "if you have not yet", and when they say it is done, run `--done GOOGLE-07,BING-03` once; it is saved and never raised again.
+- Console registration (`GOOGLE-07`, `BING-03`, `NAVER-04`) **cannot be checked from outside** — they may have done it already. Say "if you have not yet", and once they confirm, run `--done <ID>` so it is never raised again.
 - `n/a` items are not findings. Do not list them as work.
-- Do not volunteer timelines, caveats or background the user did not ask for. Report what was found and what to do.
+- Do not volunteer timelines, caveats or background nobody asked for.
 
 ## The two that come up most
 
