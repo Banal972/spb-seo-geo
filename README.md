@@ -13,18 +13,18 @@ npx spb-seo-geo     # install: pick only the harnesses you use, 2 questions
 /spbseo geo         # AI citation only
 ```
 
-**No configuration and no questions to start.** It finds your site URL in the project —
-framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing
-sitemap or robots.txt — and picks up an access log if one is lying in the repo. It only
-asks for things that unlock something: verification tokens (so it can place the
-ownership tags for you) and an access log (so GEO is measured, not assumed).
+On the first run it walks you through a short intake — **one question at a time**: the
+site address (usually already detected from your project, so it just asks you to
+confirm), whether to cover Naver and Yahoo, your AI training policy, any verification
+tokens you have, and an access log if there is one. Every answer is saved to
+`.spb-seo-geo.json`, so later runs need no flags at all.
 
 ## What makes it different
 
 | | |
 | --- | --- |
 | **Code makes the verdict, not the model** | The agent never reads your HTML, robots.txt or sitemap. One audit costs about as many tokens as reading a single report, and the same site always yields the **same result** — even if you swap the model underneath. |
-| **Nothing to configure first** | `scan` with no flags works in a fresh checkout: the URL comes from the project, not from you. Anything inferable is never a question. |
+| **Asks, then finishes the job** | The intake is a conversation, not a form: one question at a time, and anything already in your project (the site URL, an access log) becomes a confirmation rather than an open question. Nothing is asked twice. |
 | **Finishes the job instead of listing it** | Ask for the verification tokens up front and the tool can place them, instead of printing "add this yourself". For frameworks that own `<head>`, it emits the form you can actually paste — a Next.js `metadata.verification` object, not a raw `<meta>` tag. |
 | **Optional work is optional, never a failure** | Every rule runs for every site, because allowing a crawler costs nothing. Only work that needs a console account is optional, and it lands in `todo` under "Optional engines" — a site that ignores Naver never sees a Naver *failure*. Signals (`100% Hangul`, `.jp domain`) are shown as a suggestion, not a gate. |
 | **Yahoo, described honestly** | Yahoo has no index of its own: **Yahoo! JAPAN runs on Google's**, and Yahoo elsewhere runs on **Bing**. So "optimise for Yahoo" is not a real task, and inventing a Yahoo rule group would mean rules with no evidence. Japan adds exactly one real check (Yahoo! JAPAN's own `Y!J-*` crawlers) plus a note pointing at the Google findings. |

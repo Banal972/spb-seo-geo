@@ -18,41 +18,35 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 - Do not volunteer timelines, caveats or background nobody asked for.
 - Do not order someone to register with a console: `GOOGLE-07`, `BING-03` and `NAVER-04` are unverifiable from outside, so say "if you have not yet" and run `--done <ID>` once they confirm.
 
-## Just run it — no questions needed
+## Start by asking — one question at a time
 
 ```
-node <DIR>/scripts/scan.mjs
+node <DIR>/scripts/intake.mjs
 ```
 
-No flags. It finds the site URL from the project (framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing sitemap/robots) plus an access log if one sits in the repo, and says where it got them. **Ask for the URL only if it was not found.**
+This prints what is already known and what is still unanswered, in order. **Ask the user those questions one at a time and wait for each answer** — do not dump them all at once, and do not answer them yourself.
 
-Narrow it when the user cares about one side only: `--only seo` (30 rules) · `--only geo` (24) · default both (44). Whatever `--only` leaves out is stated, never silently dropped.
+The order matters: the site address first, then Naver, then Yahoo, then the AI training policy, then verification tokens, then an access log, then optional files. Anything already saved in `.spb-seo-geo.json` is skipped, so this is a first-run conversation, not a recurring one.
 
-## Ask only for what unlocks something
+The site URL is usually already in the project, so that question is a confirmation ("is this the right address?") rather than an open one. Engines are asked by name and never inferred — see below.
 
-Each of these buys a concrete capability. Ask when you reach it, not up front — and never ask for something the project already told us.
+Save every answer in one `setup` call (intake prints the exact command), and show the file preview before writing anything.
 
-| Ask for | Unlocks |
-| --- | --- |
-| **Verification tokens** (each console's "HTML tag" string) | `apply` places the ownership tags instead of telling them to |
-| **An access log** (`--access-log`, `.gz` fine) | GEO goes from "allowed" to **measured** |
-| `--ai-policy open\|cite-only\|closed` | only if they care about AI training; `open` is default |
-| `--engines naver,yahoo\|none` | only to hide optional console advice; nothing is gated |
-
-Save answers once with `setup` (same flags, plus `--url`), which then runs scan + apply preview + todo in one pass.
+Later runs need no flags at all:
 
 ```
-apply.mjs  [--write]          configure files
-todo.mjs                      what only a human can do
-submit.mjs [--since HEAD~1]   tell IndexNow about new pages
+node <DIR>/scripts/scan.mjs   [--only seo|geo] [--verbose] [--json]
+node <DIR>/scripts/apply.mjs  [--write]
+node <DIR>/scripts/todo.mjs
+node <DIR>/scripts/submit.mjs [--since HEAD~1]
 ```
 
-Needs Node 20+; if missing, say so in one line and stop.
+`--only seo` (30 rules) · `--only geo` (24) · default both (44); what `--only` leaves out is stated. Needs Node 20+ — if missing, say so in one line and stop.
 
 ## Order of work
 
-1. **`scan`** with no flags. Show the failures; say where the URL came from.
-2. **`apply`** to preview, then `apply --write` on approval.
+1. **`intake`** → ask one at a time → **`setup`** (no `--write`): shows the audit and the file preview.
+2. On approval, **`setup --write`** — or `apply --write` on later runs.
 3. Relay **`todo`** as given: required steps first, optional engines after.
 4. After they deploy, **`scan`** again against the live site.
 5. On new pages, **`submit`**. Google does not participate in IndexNow — never claim otherwise.
@@ -82,7 +76,7 @@ Exit codes: `0` clear · `1` critical · `2` warnings · `3` error
 
 Nothing is gated — allowing a crawler is free, so every rule runs regardless. Only console work is optional; `todo` prints it under "Optional engines".
 
-**Signals say what language a site is written in, never which markets its owner wants** — a `.kr` site may be going after Japan. Both engines are always listed; the signal only marks the likely one. If the user names a market the signals missed, pass `--engines naver,yahoo`; if none, `--engines none`. Saved either way. Yahoo's answer is "nothing to register" — relay what `todo` prints.
+**Never infer an engine from the site's language.** Content says what language it is written in, not which markets its owner wants — a `.kr` site may be going after Japan. Ask about each engine, and pass what the user says: `--engines naver,yahoo` or `--engines none`. Yahoo's answer is "nothing to register" — relay what `todo` prints.
 
 ## Read only when you need detail
 
