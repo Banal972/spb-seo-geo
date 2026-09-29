@@ -36,6 +36,10 @@ Requires Node 20+. If it is missing, say so in one line and stop.
 4. **`todo`** — work only a human can do in the consoles. Pass along the order, the time estimates and the indexing delay as given.
 5. **`submit`** — after deploying new pages, notify IndexNow. Google does not participate, so never claim you notified Google.
 
+## Language
+
+**Answer in whatever language the user is writing in.** This skill and its reports are English, but that is an implementation detail — the report is an intermediate artifact, not the answer. Never paste report lines verbatim to a user who is writing in another language; translate the problem and the action into their language. Keep rule IDs (`GEO-01`), user-agent names and file paths as-is.
+
 ## Reading the report
 
 | Symbol | Meaning | How to relay it |

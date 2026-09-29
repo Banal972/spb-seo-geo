@@ -92,7 +92,9 @@ Design notes and the decision log (D1–D15) live in `PLAN.md` and in the compan
 
 ## Localisation
 
-Everything — code, rules, reports, `SKILL.md` — is English. This README is also available in [한국어](./README.ko.md).
+Code, rules, reports and `SKILL.md` are English. That does **not** mean you get English answers: agents reply in the language you write in, and `SKILL.md` instructs them to translate findings rather than paste report lines verbatim. English output is only what you see if you run the scripts directly in a terminal.
+
+This README is also available in [한국어](./README.ko.md).
 
 ## Not yet verified
 
