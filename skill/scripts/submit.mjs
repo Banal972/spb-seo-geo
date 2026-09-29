@@ -2,15 +2,11 @@
 // IndexNow batch submission. Google does not participate, so never pretend we notified it.
 import { parseArgs, out, log, EXIT } from './lib/args.mjs';
 import { findRoot, loadConfig } from './lib/config.mjs';
+import { ENDPOINTS, BATCH, payload, chunk as chunkUrls } from './lib/indexnow.mjs';
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ENDPOINTS = [
-  { name: 'api.indexnow.org', url: 'https://api.indexnow.org/indexnow', note: 'shared with Bing · Yandex · Seznam' },
-  { name: 'searchadvisor.naver.com', url: 'https://searchadvisor.naver.com/indexnow', note: 'Naver' },
-];
-const BATCH = 10000;
 const DEDUPE_HOURS = 24;
 
 const args = parseArgs();
@@ -51,13 +47,12 @@ if (!fresh.length) {
 
 for (const ep of ENDPOINTS) {
   const results = [];
-  for (let i = 0; i < fresh.length; i += BATCH) {
-    const chunk = fresh.slice(i, i + BATCH);
+  for (const batch of chunkUrls(fresh, BATCH)) {
     try {
       const res = await fetch(ep.url, {
         method: 'POST',
         headers: { 'content-type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({ host, key, keyLocation: `${origin}/${key}.txt`, urlList: chunk }),
+        body: JSON.stringify(payload({ host, key, urls: batch })),
       });
       results.push(`${res.status}`);
     } catch (e) { results.push(`failed(${String(e?.message || e).slice(0, 40)})`); }
