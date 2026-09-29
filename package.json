@@ -2,23 +2,6 @@
   "name": "spb-seo-geo",
   "version": "0.1.0",
   "description": "Agent skill that audits and configures search + AI visibility (SEO/GEO) for Google, Naver, Bing and AI answer engines. Deterministic verdicts, minimal tokens.",
-  "type": "module",
-  "bin": {
-    "spb-seo-geo": "bin/install.mjs"
-  },
-  "files": [
-    "bin",
-    "skill",
-    "templates",
-    "README.md"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "scripts": {
-    "test": "node --test \"test/*.test.mjs\"",
-    "lint:rules": "node skill/scripts/lib/rules.mjs --lint"
-  },
   "keywords": [
     "seo",
     "geo",
@@ -29,7 +12,42 @@
     "indexnow",
     "claude-code",
     "codex",
-    "antigravity"
+    "antigravity",
+    "gemini-cli",
+    "search-console",
+    "bing-webmaster",
+    "search-advisor",
+    "robots-txt",
+    "sitemap",
+    "llm-seo"
   ],
-  "license": "MIT"
+  "homepage": "https://github.com/Banal972/spb-seo-geo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Banal972/spb-seo-geo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Banal972/spb-seo-geo/issues"
+  },
+  "author": "SPBABO",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "spb-seo-geo": "bin/install.mjs"
+  },
+  "files": [
+    "bin",
+    "skill",
+    "templates",
+    "README.md",
+    "README.ko.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "lint:rules": "node skill/scripts/lib/rules.mjs --lint"
+  }
 }
