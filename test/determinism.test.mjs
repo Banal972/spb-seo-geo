@@ -36,7 +36,7 @@ test('repeated evaluation of identical facts gives an identical verdict', () => 
 test('the IndexNow key is taken from the file in the repo, not from config alone', () => {
   const f = {
     remote: true,
-    indexNowKey: { key: 'bad802f0f0b8182c1f5620dd8b4f666e', fromRepo: true, res: { ok: true, body: 'bad802f0f0b8182c1f5620dd8b4f666e' } },
+    indexNowKey: { key: '0123456789abcdef0123456789abcdef', fromRepo: true, res: { ok: true, body: '0123456789abcdef0123456789abcdef' } },
   };
   const res = checkers.indexNowKey(f);
   assert.equal(res.ok, true);

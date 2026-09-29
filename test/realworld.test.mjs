@@ -61,9 +61,9 @@ test('robots.txt owned by a generator is fixed in its config, never as a file', 
 });
 
 test('a committed verification file counts as verified, not as missing', () => {
-  const d = proj({ 'package.json': NEXT, 'public/naverc84cabc.html': 'x' });
+  const d = proj({ 'package.json': NEXT, 'public/naverabc123def.html': 'x' });
   const local = collectLocalFiles(d, detectFramework(d));
-  assert.deepEqual(local.verify, ['public/naverc84cabc.html']);
+  assert.deepEqual(local.verify, ['public/naverabc123def.html']);
   const res = checkers.metaPresent(
     { remote: true, home: { parsed: { meta: {}, property: {} } }, files: {}, local },
     { names: ['naver-site-verification'], unknownIfMissing: true, localMatch: '(^|/)naver[a-z0-9]*\\.html$' },

@@ -10,7 +10,12 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
 const UNKNOWN = (why) => ({ ok: null, detail: why });
-const needRemote = (f) => (f.remote ? null : UNKNOWN('ran without a deployed URL (--url required)'));
+const needRemote = (f) => {
+  if (!f.remote) return UNKNOWN('ran without a deployed URL (--url required)');
+  // Nothing about the live site is knowable if we never reached it.
+  if (f.unreachable) return UNKNOWN(`the site could not be reached (${f.unreachable})`);
+  return null;
+};
 const pages = (f) => [f.home, ...f.samples].filter((p) => p && p.parsed);
 
 export const checkers = {

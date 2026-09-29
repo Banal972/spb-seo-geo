@@ -1,5 +1,5 @@
 // Fetch layer. The agent never sees these raw results (invariant 1).
-const UA = 'spb-seo-geo/0.1 (+https://github.com/spbabo97/spb-seo-geo)';
+const UA = 'spb-seo-geo/0.1 (+https://github.com/Banal972/spb-seo-geo)';
 const TIMEOUT = 8000;
 
 export async function get(url, { timeout = TIMEOUT, method = 'GET', maxRedirects = 5 } = {}) {

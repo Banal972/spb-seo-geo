@@ -16,7 +16,7 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 - Never pass `--write` without the user's approval.
 - Do not present `n/a` items as work — they do not apply here.
 - Do not volunteer timelines, caveats or background nobody asked for.
-- Do not order someone to register with a console: `GOOGLE-07`, `BING-03` and `NAVER-04` are unverifiable from outside, so say "if you have not yet" and run `--done <ID>` once they confirm.
+- Do not order someone to register with a console: `GOOGLE-07`, `BING-03`, `NAVER-04` are unverifiable from outside — say "if you have not yet", then `--done <ID>` once they confirm.
 
 ## Start by asking — one question at a time
 
@@ -24,11 +24,11 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 node <DIR>/scripts/intake.mjs
 ```
 
-It prints what is known, what is still unanswered, and **the tradeoff for each choice**. Ask one at a time and wait — never dump them as a form, never answer them yourself, and **always give the cost with the option**. A choice without its consequences is not a choice; `references/choices.md` has the evidence if they dig.
+It prints what is known, what is unanswered, and **the tradeoff for each choice**. Ask one at a time and wait — never as a form, never answering for them, and **always give the cost with the option**. `references/choices.md` has the evidence if they dig.
 
-Order: **which site** (a monorepo often holds several — never pick one yourself), address, Naver, Yahoo, AI training policy, verification tokens, access log, optional files. Anything already in `.spb-seo-geo.json` is skipped — this is a first-run conversation, not a recurring one.
+Order: **which site** (a monorepo often holds several — never pick one yourself), address, Naver, Yahoo, AI policy, tokens, access log, optional files. Anything already in `.spb-seo-geo.json` is skipped — a first-run conversation, not a recurring one.
 
-The site URL is usually already in the project, so that question is a confirmation rather than an open one. Save every answer in one `setup` call (intake prints the exact command) and show the file preview before writing anything.
+The site URL is usually already in the project, so that one is a confirmation. Save the answers in one `setup` call (intake prints it) and show the file preview before writing.
 
 Later runs need no flags:
 
@@ -39,7 +39,7 @@ node <DIR>/scripts/todo.mjs
 node <DIR>/scripts/submit.mjs [--since HEAD~1]
 ```
 
-`--only seo` (30 rules) · `--only geo` (24) · default both (44); what `--only` leaves out is stated. Needs Node 20+ — if missing, say so in one line and stop.
+`--only seo` (30) · `--only geo` (24) · default both (44); what it leaves out is stated. Needs Node 20+ — if missing, say so and stop.
 
 ## Order of work
 
@@ -75,10 +75,11 @@ Nothing is gated — allowing a crawler is free, so every rule runs regardless. 
 
 `<DIR>/references/` — `choices.md` (what each decision costs) · `google.md` · `naver.md` · `bing.md` · `yahoo.md` · `geo.md`
 
-## Two things the audit already handles for you
+## Three things the audit already handles
 
-- **If a plugin generates `robots.txt`** (`next-sitemap` and friends), `apply` prints the snippet for *that tool's config* rather than writing a file the next build overwrites. Relay the snippet.
-- **Already in the repo but not deployed** reads "exists locally, deploy it", not missing. Never tell someone to create what they already created.
+- **If a plugin generates `robots.txt`**, `apply` prints the snippet for *that tool's config* rather than writing a file the next build overwrites. Relay the snippet.
+- **Already in the repo but not deployed** reads "exists locally, deploy it", not missing.
+- **If the site could not be reached**, everything live is unchecked — never report that as failures.
 
 ## GEO is measured, not assumed
 

@@ -137,15 +137,20 @@ for (const t of targets) {
   }
 }
 
+const globalPointers = [];
 for (const a of chosen) {
   if (!a.command) continue;
   const file = a.command(scope);
   const tpl = readFileSync(join(SRC_TPL, a.template), 'utf8');
   const skillDir = a.skill(scope) === primary ? primary : a.skill(scope);
-  const body = tpl.replaceAll('{{SKILL_DIR}}', portable(skillDir));
+  // A command file outside the project cannot use a project-relative path: open another
+  // repo and /spbseo would point at nothing. Relative only when both live in the project.
+  const fileIsInProject = file.startsWith(CWD);
+  const body = tpl.replaceAll('{{SKILL_DIR}}', fileIsInProject ? portable(skillDir) : skillDir);
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, body);
-  made.push([file, '/spbseo command']);
+  made.push([file, fileIsInProject ? '/spbseo command' : '/spbseo command (global)']);
+  if (!fileIsInProject && scope === 'project') globalPointers.push([a.label, file]);
 }
 
 console.log('');
@@ -154,6 +159,13 @@ console.log(`
    run:     /spbseo
    update:  npx spb-seo-geo@latest
    scope:   ${scope === 'global' ? 'global' : 'this project'} · nothing was written for harnesses you did not pick`);
+
+if (globalPointers.length) {
+  console.log(`
+   note:    ${globalPointers.map(([l]) => l).join(', ')} keeps its command file in your home
+            directory, so /spbseo there points at *this* project wherever you run it.
+            Install with --scope global, or re-run here per project.`);
+}
 
 if (scope === 'project') {
   console.log(`

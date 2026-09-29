@@ -13,7 +13,7 @@ Yahoo has no search index of its own. Which engine backs it depends on the count
 - The partnership with Google was up for renewal in 2025 and has continued into 2026. Re-verify this before relying on it: if it ever ends, Japan needs its own rule group.
 - **There is no separate webmaster console.** Submit sitemaps through Google Search Console. Yahoo! JAPAN's old Site Explorer is long gone.
 - The results page layout differs and Yahoo! JAPAN injects its own modules, so visibility is not identical — but the index, and therefore crawling and eligibility, is Google's.
-- Yahoo! JAPAN does run **its own crawlers** (`Y!J-WSC`, `Y!J-DLC`, `Y!J-ASR`, `Y!J-BRW` and others in the `Y!J-` family). They feed Yahoo! JAPAN's own surfaces rather than web search ranking, and the recent ones honour robots.txt. Blocking them is `YAHOO-01`.
+- Yahoo! JAPAN does run **its own crawlers** (`Y!J-WSC`, `Y!J-DLC`, `Y!J-ASR`, `Y!J-BRW` and others in the `Y!J-` family). They feed Yahoo! JAPAN's own surfaces rather than web search ranking, and the recent ones honour robots.txt. Blocking them is `YAHOO-01`; Yahoo! JAPAN documents the family at support.yahoo-net.jp.
 
 ## Yahoo global
 

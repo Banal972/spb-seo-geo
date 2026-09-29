@@ -36,6 +36,12 @@ export async function collect({ url, config = {}, options = {} }) {
 
   log('· fetching: robots.txt and home');
   const [robotsRes, homeRes] = await Promise.all([get(abs(origin, '/robots.txt')), get(url)]);
+  // A host that does not resolve is not a site with a missing robots.txt. Saying otherwise
+  // is a false failure, and the whole report becomes noise built on it.
+  if (!homeRes.ok && homeRes.status === 0) {
+    facts.unreachable = homeRes.error || 'no response';
+    log(`! could not reach ${url} — ${facts.unreachable}`);
+  }
   facts.robots = { res: robotsRes, parsed: parseRobots(robotsRes.ok ? robotsRes.body : '') };
   facts.home = { res: homeRes, url: homeRes.url, parsed: homeRes.body ? parseHtml(homeRes.body) : null };
   if (facts.home.parsed) facts.home.parsed.url = homeRes.url;

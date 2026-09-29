@@ -19,6 +19,11 @@ export function renderScan(result, facts, opts = {}) {
   if (result.only) head.splice(1, 0, `${result.only.toUpperCase()} only`);
   L.push(head.join('  ·  '), '');
   if (facts.urlFrom && facts.urlFrom !== '--url') L.push(`Target ${facts.urlFrom}. Pass --url to override.`, '');
+  if (facts.unreachable) {
+    L.push(`Could not reach ${facts.baseUrl} — ${facts.unreachable}.`,
+           '  Everything about the live site is unchecked, not passing. Fix the address or deploy first.', '');
+  }
+
   const es = enginesSentence(facts.engines);
   if (es.length) L.push(...es, '');
   L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked` + (c.info ? `   · ${c.info} note` : '') + (c.skipped ? `   ⏭ ${c.skipped} skipped` : '') + (c.notApplicable ? `   n/a ${c.notApplicable}` : ''), '');

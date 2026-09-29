@@ -545,7 +545,7 @@
       "fix": "meta-verify-bing",
       "problem": "no Bing ownership signal (msvalidate.01 or BingSiteAuth.xml)",
       "action": "Pass --bing-token to emit the tag, or import the site from Google Search Console in one step",
-      "evidence": "https://www.bing.com/webmasters/help/how-to-verify-ownership-of-your-site-afcfefc6",
+      "evidence": "https://learn.microsoft.com/en-us/bingwebmaster/getting-started",
       "grade": "secondary",
       "checked": "2026-09-29",
       "scope": [
@@ -640,7 +640,7 @@
       "fix": "robots",
       "problem": "training crawler policy differs from the selected preset",
       "action": "State your intent with --ai-policy=open|cite-only|closed. The default open maximises visibility; blocking training should be an explicit choice",
-      "evidence": "https://darkvisitors.com/agents",
+      "evidence": "https://knownagents.com/agents",
       "grade": "secondary",
       "checked": "2026-09-29",
       "scope": [
@@ -735,7 +735,7 @@
       },
       "problem": "Yahoo! JAPAN's own crawlers are blocked in robots.txt",
       "action": "Unblock the Y!J-* family. Allowing them costs nothing, and Yahoo! JAPAN web search itself runs on Google's index",
-      "evidence": "https://radar.cloudflare.com/bots/directory/yahoojapan",
+      "evidence": "https://support.yahoo-net.jp/PccSearch/s/article/H000007955",
       "grade": "secondary",
       "checked": "2026-09-29",
       "scope": [
