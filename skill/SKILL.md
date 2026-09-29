@@ -21,7 +21,7 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 node <DIR>/scripts/scan.mjs
 ```
 
-No flags. It finds the site URL from the project — framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing `sitemap.xml`/`robots.txt` — plus an access log if one sits in the repo. The report says where the URL came from. **Ask for the URL only if it was not found.**
+No flags. It finds the site URL from the project (framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing sitemap/robots) plus an access log if one sits in the repo, and says where it got them. **Ask for the URL only if it was not found.**
 
 Narrow it when the user cares about one side only: `--only seo` (30 rules) · `--only geo` (24) · default both (44). Whatever `--only` leaves out is stated, never silently dropped.
 
@@ -31,10 +31,10 @@ Each of these buys a concrete capability. Ask when you reach it, not up front �
 
 | Ask for | Unlocks |
 | --- | --- |
-| **Verification tokens** (the "HTML tag" string from each console) | `apply` places the ownership tags instead of telling them to |
-| **An access log** (`--access-log`, `.gz` fine) | GEO goes from "allowed" to **measured** — which AI crawlers actually fetched |
-| `--ai-policy open\|cite-only\|closed` | only if they care about AI training; `open` is the default |
-| `--engines naver,yahoo\|none` | only to hide optional console advice; nothing is gated on it |
+| **Verification tokens** (each console's "HTML tag" string) | `apply` places the ownership tags instead of telling them to |
+| **An access log** (`--access-log`, `.gz` fine) | GEO goes from "allowed" to **measured** |
+| `--ai-policy open\|cite-only\|closed` | only if they care about AI training; `open` is default |
+| `--engines naver,yahoo\|none` | only to hide optional console advice; nothing is gated |
 
 Save answers once with `setup` (same flags, plus `--url`), which then runs scan + apply preview + todo in one pass.
 
