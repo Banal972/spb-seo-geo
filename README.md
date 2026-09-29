@@ -140,12 +140,29 @@ A finding you cannot act on is noise, so:
 - **Console registration is phrased as a question, not an order**, because there is no way to see from outside whether you already did it. Tell it once with `--done GOOGLE-07` and it never asks again.
 - **Images are not counted against you.** An earlier rule compared text length to image count, which punished landing pages for being landing pages. The real check — is there body text at all — is `CORE-12`.
 
-## Not yet verified
+## Verified, and not
 
-- Bundled-script execution in Codex and Antigravity (only Claude Code confirmed)
-- A real Naver IndexNow round-trip (needs a deployed site serving the key file)
-- Whether cheaper models (DeepSeek, Kimi, …) actually follow `SKILL.md`
-- The 20% Hangul-ratio threshold is a guess and needs tuning against real sites
+Checked against three live sites (a Next.js monorepo, a marketing site, a Vite SPA):
+
+- **Naver IndexNow really works** — and did not, until this was tested. Naver returned
+  422 for every submission because the request carried `keyLocation`; both endpoints now
+  return 200. If you used an earlier build, nothing you submitted reached Naver.
+- **Runs outside Claude Code** — Codex discovers the skill, executes the bundled script
+  and relays the report. Antigravity is wired the same way but has not been run.
+- **Determinism holds** — the same site twice yields an identical verdict set.
+- **Every citation resolves**, and the load-bearing ones were re-read against the claim
+  they support. Four rules were corrected or split because their source did not say what
+  they claimed.
+
+Still open:
+
+- Whether cheaper models (DeepSeek, Kimi, …) follow `SKILL.md` as written. Untested: the
+  Codex install here cannot select a small model. Verdicts come from the script, so the
+  output should not vary — but discovery and obedience might.
+- The 20% Hangul / 5% kana thresholds for suggesting a regional engine are judgement
+  calls, not measurements.
+- Antigravity, Cursor and the rest are wired by path convention; only Claude Code and
+  Codex have actually been run.
 
 ## License
 
