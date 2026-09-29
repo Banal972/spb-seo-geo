@@ -27,23 +27,24 @@ test('every open question carries its tradeoff', () => {
   }
 });
 
-test('the training policy states what each option buys and costs, and marks the unverified part', () => {
-  assert.match(out, /open .*training allowed/i);
-  assert.match(out, /grade: low, unverified/, 'the "model remembers the brand" benefit is a bet, not a mechanism');
-  assert.match(out, /cite-only .*citation kept/i);
-  assert.match(out, /closed .*disappear from AI answers/i);
-  assert.match(out, /Search ranking is identical in all three/, 'the thing people fear losing is unaffected');
+test('the training policy is asked in plain words, with both costs and the unverified part', () => {
+  assert.match(out, /Is it fine for AI companies to learn from your content/, 'no jargon in the question itself');
+  assert.match(out, /nobody can prove that per site/, 'the "model remembers your brand" benefit is a bet, not a mechanism');
+  assert.match(out, /can still quote you and link to you/);
+  assert.match(out, /disappears from them/, 'the third option is named but not pushed');
+  assert.match(out, /ranking is exactly the same/, 'the thing people fear losing is unaffected');
 });
 
 test('llms.txt is presented with both sides, not sold', () => {
-  assert.match(out, /helps coding agents read your docs/);
-  assert.match(out, /97% of llms\.txt files measured had zero traffic/);
+  assert.match(out, /only helps if you publish developer documentation/);
+  assert.match(out, /97% of measured files saw zero traffic/);
   assert.match(out, /Google says it is unnecessary/);
 });
 
-test('RSS names the staleness cost, not just the benefit', () => {
-  assert.match(out, /Naver still treats it as a first-class input/);
-  assert.match(out, /goes stale unless your build regenerates it/);
+test('RSS is framed by whether the site publishes, and names the upkeep', () => {
+  assert.match(out, /publish posts regularly/, 'asked by what the site is, not by what RSS is');
+  assert.match(out, /Naver still reads them/);
+  assert.match(out, /your build has to regenerate it/);
 });
 
 test('the agent is told to give the cost with the question', () => {

@@ -63,5 +63,5 @@ test('the suggested setup command does not ask for an engine choice', () => {
 test('an access log in the repo is offered rather than asked about blindly', () => {
   const out = run(proj({ 'package.json': '{"name":"x"}', 'access.log': 'x' }));
   assert.match(out, /found in the repo/);
-  assert.match(out, /Use .*access\.log to measure AI crawler activity\?/);
+  assert.match(out, /use it to see which AI crawlers actually visited\?/);
 });
