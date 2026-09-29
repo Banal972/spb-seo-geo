@@ -800,14 +800,14 @@
     {
       "id": "GEO-11",
       "engine": "ai",
-      "severity": "warn",
+      "severity": "info",
       "autofix": false,
       "check": "headingStructure",
       "args": {},
-      "problem": "heading structure is broken (no h1, several h1s, or skipped levels)",
-      "action": "Retrieval systems chunk a page along its headings. One h1 and no level skips makes the passage boundaries unambiguous",
-      "evidence": "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
-      "grade": "secondary",
+      "problem": "heading levels are skipped (for example h1 straight to h3)",
+      "action": "Google is explicit that the number of h1 elements does not affect ranking, so this is not about h1 count. A skipped level usually means styling is driving structure, and it costs screen-reader users the page outline. If the body comes from a rich-text editor, demote its headings one level at render time rather than editing every document",
+      "evidence": "https://www.w3.org/WAI/tutorials/page-structure/headings/",
+      "grade": "low",
       "checked": "2026-09-29",
       "scope": [
         "geo"

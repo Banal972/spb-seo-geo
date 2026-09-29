@@ -42,7 +42,7 @@ What this deliberately does **not** do: query ChatGPT or Perplexity to see wheth
 
 | Rule | Why |
 | --- | --- |
-| `GEO-11` headings | Retrieval chunks a page along its headings. One `h1`, no skipped levels, unambiguous passage boundaries |
+| `GEO-11` headings | **Skipped levels only** (`h1` → `h3`). Google is explicit that h1 *count* is irrelevant — "your site is going to rank perfectly fine with no H1 tags or with five H1 tags" — so we do not flag it. A skipped level is a template/styling signal and an accessibility cost, graded `low`. If the body is editor-supplied HTML, demote headings at render time |
 | `GEO-12` dates | An undated page is hard to cite with confidence; answer engines weigh recency |
 | `GEO-13` entity | An answer attributes a claim to someone. `Organization`/`Person` with `sameAs` is how you become that someone. Google says schema is not *required* for AI features — attribution is a different problem from eligibility |
 

@@ -337,7 +337,10 @@ export const checkers = {
     return { ok: true, detail: 'no disallowed crawler activity found' };
   },
 
-  // One H1 and a sensible hierarchy: retrieval systems chunk along headings.
+  // Skipped levels only. Google is explicit that h1 count does not matter — "your site is
+  // going to rank perfectly fine with no H1 tags or with five H1 tags" — so flagging that
+  // would be folklore, not a finding. A jump like h1 → h3 is still worth mentioning: it is
+  // usually styling driving structure, and it costs screen-reader users the outline.
   headingStructure(f) {
     const g = needRemote(f); if (g) return g;
     const list = pages(f);
@@ -345,14 +348,12 @@ export const checkers = {
     const problems = [];
     for (const p of list) {
       const hs = p.parsed.headings;
-      const h1 = hs.filter((h) => h.level === 1).length;
-      if (h1 === 0) problems.push(`${p.url} has no h1`);
-      else if (h1 > 1) problems.push(`${p.url} has ${h1} h1 elements`);
-      const jumps = hs.some((h, i) => i > 0 && h.level - hs[i - 1].level > 1);
-      if (jumps) problems.push(`${p.url} skips a heading level`);
+      if (!hs.length) continue;
+      const jump = hs.find((h, i) => i > 0 && h.level - hs[i - 1].level > 1);
+      if (jump) problems.push(`${p.url} jumps to h${jump.level} ("${jump.text.slice(0, 30)}")`);
     }
-    if (problems.length) return { ok: false, detail: problems.slice(0, 3).join(' · ') };
-    return { ok: true, detail: `${list.length} pages have a single h1 and no level skips` };
+    if (problems.length) return { ok: false, detail: problems.slice(0, 2).join(' · ') };
+    return { ok: true, detail: `${list.length} pages have no skipped heading levels` };
   },
 
   // Undated content is hard to trust and hard to cite.
