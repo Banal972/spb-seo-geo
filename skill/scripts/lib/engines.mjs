@@ -91,16 +91,25 @@ export function enginesPhase2(phase1, pages = []) {
   return { ...phase1, suggested };
 }
 
-// Not a gate. Everything is checked for everyone; this only says which optional
-// console work is likely to be worth the user's time.
+// Signals tell you what language a site is written in. They do not tell you which
+// markets its owner wants — a Korean site may well be going after Japan. So the
+// available engines are always named; signals only order them.
 export function enginesSentence(s) {
   const sug = Object.keys(s.suggested || {});
+  const all = OPTIONAL_ENGINES;
   if (s.answered) {
-    if (!s.engines.length) return ['Optional engines: none selected.'];
-    return [`Optional engines: ${s.engines.map((k) => LABEL[k]).join(', ')}  (set by ${s.source})`];
+    const chosen = s.engines.length ? s.engines.map((k) => LABEL[k]).join(', ') : 'none';
+    const rest = all.filter((k) => !s.engines.includes(k));
+    return [`Optional engines: ${chosen}  (set by ${s.source})`
+      + (rest.length ? `   · also available: ${rest.join(', ')}` : '')];
   }
-  if (!sug.length) return [];
-  return [`Signals suggest you may want: ${sug.map((k) => `${LABEL[k]} — ${s.suggested[k].join(' · ')}`).join('  |  ')}`];
+  const order = [...sug, ...all.filter((k) => !sug.includes(k))];
+  return [
+    `Optional engines available: ${order.map((k) => LABEL[k] + (sug.includes(k) ? ' ←' : '')).join(' · ')}`,
+    sug.length
+      ? `  ← suggested by this site's content (${sug.map((k) => s.suggested[k].join(' · ')).join(' | ')}). Content says language, not intent — choose with --engines`
+      : '  Choose with --engines naver,yahoo (or --engines none to stop mentioning it)',
+  ];
 }
 
 export const enginesValue = (s) => (s.answered ? (s.engines.join(',') || 'none') : 'not-set');

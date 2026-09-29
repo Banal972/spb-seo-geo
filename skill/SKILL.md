@@ -14,6 +14,9 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 - Do not invent a score. Report counts and severities.
 - Do not enumerate passing rules. Say `✅ N pass` in one line.
 - Never pass `--write` without the user's approval.
+- Do not present `n/a` items as work — they do not apply here.
+- Do not volunteer timelines, caveats or background nobody asked for.
+- Do not order someone to register with a console: `GOOGLE-07`, `BING-03` and `NAVER-04` are unverifiable from outside, so say "if you have not yet" and run `--done <ID>` once they confirm.
 
 ## Just run it — no questions needed
 
@@ -68,8 +71,8 @@ Needs Node 20+; if missing, say so in one line and stop.
 | `❌` critical | **always explain.** Something is blocking visibility |
 | `?` unchecked | **not a pass.** Say why it could not be checked |
 | `⏭` hidden | one line; never drop it silently |
-| `n/a` | does not apply here (no access log, or not an article site). **Not a defect — do not present it as one** |
-| `✔` | the user already told us it was done |
+| `n/a` | does not apply (no access log, not an article site). **Not a defect** |
+| `✔` | the user already said it was done |
 
 `[evidence: primary]` = official engine docs · `secondary` = research/measurement · `low` = correlation only. **Relay the grade as given.**
 
@@ -77,7 +80,9 @@ Exit codes: `0` clear · `1` critical · `2` warnings · `3` error
 
 ## Optional engines
 
-Nothing is gated — allowing a crawler is free. Only console work is optional, and `todo` prints it under "Optional engines", including the Yahoo answer (nothing to register: Yahoo! JAPAN runs on Google's index). Relay what `todo` says rather than improvising.
+Nothing is gated — allowing a crawler is free, so every rule runs regardless. Only console work is optional; `todo` prints it under "Optional engines".
+
+**Signals say what language a site is written in, never which markets its owner wants** — a `.kr` site may be going after Japan. Both engines are always listed; the signal only marks the likely one. If the user names a market the signals missed, pass `--engines naver,yahoo`; if none, `--engines none`. Saved either way. Yahoo's answer is "nothing to register" — relay what `todo` prints.
 
 ## Read only when you need detail
 
@@ -86,12 +91,6 @@ Nothing is gated — allowing a crawler is free. Only console work is optional, 
 ## GEO is measured, not assumed
 
 With an access log the report prints an **AI crawler activity** block: which citation bots fetched the site, and whether a real person arrived through an AI product. Relay it — it is the hardest data in the report. `citation none` means nothing can cite the site however good the content is; lead with that.
-
-## Do not nag
-
-- Console registration (`GOOGLE-07`, `BING-03`, `NAVER-04`) **cannot be checked from outside** — they may have done it already. Say "if you have not yet", and once they confirm, run `--done <ID>` so it is never raised again.
-- `n/a` items are not findings. Do not list them as work.
-- Do not volunteer timelines, caveats or background nobody asked for.
 
 ## The two that come up most
 

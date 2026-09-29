@@ -26,7 +26,7 @@ test('signals are a suggestion, never a gate', () => {
   assert.equal(m.answered, false);
   assert.deepEqual(m.engines, [], 'nothing is selected on a guess');
   assert.ok(m.suggested.naver);
-  assert.match(enginesSentence(m).join('\n'), /Signals suggest/);
+  assert.match(enginesSentence(m).join('\n'), /suggested by this site/);
 });
 
 test('Naver is suggested from Korean content even when lang says otherwise', () => {
@@ -62,8 +62,9 @@ test('script ratios separate Korean, Japanese, Chinese and latin', () => {
   assert.equal(scriptRatios('latin only').hangul, 0);
 });
 
-test('choosing none says so plainly; no signal says nothing at all', () => {
-  assert.match(enginesSentence(enginesPhase1({ option: 'none', url: 'https://a.kr' })).join(''), /none selected/);
+test('choosing none is stated plainly, and the engines stay discoverable either way', () => {
+  assert.match(enginesSentence(enginesPhase1({ option: 'none', url: 'https://a.kr' })).join('\n'), /Optional engines: none/);
   const quiet = detect('https://a.com', '<html lang="en"><body>A plain english page.</body></html>');
-  assert.deepEqual(enginesSentence(quiet), []);
+  // Never silence the list: a site with no Korean or Japanese on it may still want those markets.
+  assert.match(enginesSentence(quiet).join('\n'), /naver,yahoo/);
 });

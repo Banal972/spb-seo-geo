@@ -54,12 +54,15 @@ try {
   const suggestedEngines = Object.keys(facts.engines.suggested || {});
   const chosen = facts.engines.answered ? facts.engines.engines : suggestedEngines;
   const showYahoo = chosen.includes('yahoo');
+  // What was not chosen still has to be discoverable. A .kr site may be going after Japan.
+  const unchosen = ['naver', 'yahoo'].filter((e) => !chosen.includes(e));
 
   if (regional.length || showYahoo) {
     L.push('Optional engines');
     if (!facts.engines.answered && suggestedEngines.length) {
       L.push(`  (not chosen yet — signals suggest ${suggestedEngines.map((k) => OPT_LABEL[k]).join(' and ')}; choose with --engines)`);
     }
+    if (unchosen.length) L.push(`  Also available: ${unchosen.map((e) => OPT_LABEL[e]).join(' · ')} — add with --engines ${[...chosen, ...unchosen].join(',')}`);
     L.push('');
     for (const eng of ['naver', 'yahoo']) {
       const group = regional.filter((i) => i.region === eng);
