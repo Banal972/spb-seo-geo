@@ -67,13 +67,20 @@ export function parseHtml(html = '') {
   };
 }
 
-// Hangul character ratio. The most reliable signal in market detection.
-export function hangulRatio(text = '') {
+// Script ratios. The most reliable signals in market detection, because unlike a
+// lang attribute they come from the content itself and cannot be left at a framework default.
+// Japanese is detected by kana, not kanji: kanji is shared with Chinese, kana is not.
+export function scriptRatios(text = '') {
   const letters = text.replace(/[^\p{L}\p{N}]/gu, '');
-  if (!letters.length) return 0;
-  const hangul = letters.match(/[가-힣ᄀ-ᇿ㄰-㆏]/g) || [];
-  return hangul.length / letters.length;
+  if (!letters.length) return { hangul: 0, kana: 0, letters: 0 };
+  const hangul = (letters.match(/[\uAC00-\uD7A3\u1100-\u11FF\u3130-\u318F]/g) || []).length;
+  const kana = (letters.match(/[\u3040-\u309F\u30A0-\u30FF]/g) || []).length;
+  return { hangul: hangul / letters.length, kana: kana / letters.length, letters: letters.length };
 }
+
+export const hangulRatio = (text = '') => scriptRatios(text).hangul;
+export const kanaRatio = (text = '') => scriptRatios(text).kana;
+
 
 // Citation signals: statistics, quotations, outbound links (GEO-06)
 export function citationSignals(page) {

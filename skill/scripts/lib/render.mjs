@@ -58,9 +58,14 @@ export function renderScan(result, facts, opts = {}) {
   }
 
   if (c.skipped) {
-    const ids = result.skippedRules.map((r) => r.id).join(' · ');
-    L.push(`⏭ ${c.skipped} Naver-only rules not evaluated (${ids})`);
-    L.push('   If you target Korean users, pass --market=kr', '');
+    const byMarket = {};
+    for (const r of result.skippedRules) (byMarket[r.market] ||= []).push(r.id);
+    const label = { kr: 'Naver (Korea)', jp: 'Yahoo! JAPAN (Japan)' };
+    for (const [mk, ids] of Object.entries(byMarket)) {
+      L.push(`⏭ ${ids.length} ${label[mk] || mk} rules not evaluated (${ids.join(' · ')})`);
+      L.push(`   If that region applies, pass --market=${mk}`);
+    }
+    L.push('');
   }
 
   if (result.meta.stale.length) {
@@ -106,7 +111,7 @@ export function renderJson(result, facts) {
   return JSON.stringify({
     tool: 'spb-seo-geo', version: '0.1.0',
     target: facts.baseUrl, framework: facts.framework || null,
-    market: { value: facts.market.market, basis: facts.market.basis },
+    market: { markets: facts.market.markets, answered: facts.market.answered, suggested: facts.market.suggested },
     counts: result.counts,
     findings: result.findings.map(({ id, engine, severity, grade, status, detail, problem, action, evidence, fixable, fix }) =>
       ({ id, engine, severity, grade, status, detail, problem, action, evidence, fixable, fix })),

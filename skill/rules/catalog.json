@@ -645,6 +645,43 @@
       "evidence": "https://arxiv.org/abs/2311.09735",
       "grade": "low",
       "checked": "2026-09-29"
+    },
+    {
+      "id": "YAHOO-01",
+      "engine": "yahoo",
+      "severity": "warn",
+      "autofix": false,
+      "market": "jp",
+      "check": "robotsAllows",
+      "args": {
+        "uas": [
+          "Y!J-WSC",
+          "Y!J-DLC",
+          "Y!J-ASR",
+          "Y!J-BRW"
+        ]
+      },
+      "problem": "Yahoo! JAPAN's own crawlers are blocked in robots.txt",
+      "action": "Unblock the Y!J-* family. Yahoo! JAPAN web search runs on Google's index, so GOOGLE rules cover ranking, but these crawlers feed Yahoo! JAPAN's own surfaces",
+      "evidence": "https://radar.cloudflare.com/bots/directory/yahoojapan",
+      "grade": "secondary",
+      "checked": "2026-09-29"
+    },
+    {
+      "id": "YAHOO-02",
+      "engine": "yahoo",
+      "severity": "info",
+      "autofix": false,
+      "market": "jp",
+      "check": "engineNote",
+      "args": {
+        "note": "Yahoo! JAPAN web search is powered by Google's index (about a third of Japan's search market), so your GOOGLE findings above apply to it. There is no separate submission console — use Google Search Console. Yahoo outside Japan is powered by Bing, so BING findings apply there."
+      },
+      "problem": "how Yahoo is covered",
+      "action": "Nothing to do here. Fix the GOOGLE items to improve Yahoo! JAPAN, and the BING items to improve Yahoo elsewhere",
+      "evidence": "https://www.theegg.com/seo/japan/google-yahoo-japan-partnership/",
+      "grade": "secondary",
+      "checked": "2026-09-29"
     }
   ]
 }

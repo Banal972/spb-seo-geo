@@ -3,7 +3,7 @@
 //   ok=null means "could not check". It is never promoted to true (invariant 2).
 import { isAllowed, blocksEverything, hasExplicitGroup } from './robots.mjs';
 import { isValidLastmod } from './xml.mjs';
-import { hangulRatio, citationSignals as sig } from './html.mjs';
+import { scriptRatios, citationSignals as sig } from './html.mjs';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
@@ -173,11 +173,16 @@ export const checkers = {
     if (!f.home.parsed) return UNKNOWN('could not read the HTML');
     const { lang, text } = f.home.parsed;
     if (!lang) return { ok: false, detail: 'no lang attribute on <html>' };
-    const ratio = hangulRatio(text);
     if (text.length < 200) return UNKNOWN('body text too short to judge language');
-    if (ratio >= 0.3 && !/^ko/.test(lang)) return { ok: false, detail: `${Math.round(ratio * 100)}% Hangul body but lang=${lang}` };
-    if (ratio < 0.05 && /^ko/.test(lang)) return { ok: false, detail: `${Math.round(ratio * 100)}% Hangul body but lang=${lang}` };
-    return { ok: true, detail: `lang=${lang} · ${Math.round(ratio * 100)}% Hangul` };
+    const r = scriptRatios(text);
+    // Only scripts we can identify reliably are checked: Hangul for Korean, kana for Japanese.
+    const pct = (x) => `${Math.round(x * 100)}%`;
+    if (r.hangul >= 0.3 && !/^ko/.test(lang)) return { ok: false, detail: `${pct(r.hangul)} Hangul body but lang=${lang}` };
+    if (r.kana >= 0.1 && !/^ja/.test(lang)) return { ok: false, detail: `${pct(r.kana)} kana body but lang=${lang}` };
+    if (/^ko/.test(lang) && r.hangul < 0.05) return { ok: false, detail: `lang=${lang} but only ${pct(r.hangul)} Hangul` };
+    if (/^ja/.test(lang) && r.kana < 0.02) return { ok: false, detail: `lang=${lang} but only ${pct(r.kana)} kana` };
+    const seen = r.hangul >= 0.05 ? `${pct(r.hangul)} Hangul` : r.kana >= 0.02 ? `${pct(r.kana)} kana` : 'latin/other script';
+    return { ok: true, detail: `lang=${lang} · ${seen}` };
   },
 
   metaPresent(f, a) {
@@ -274,6 +279,11 @@ export const checkers = {
     walk(f.dir);
     if (hits.length) return { ok: false, detail: `found in ${hits[0]}` };
     return { ok: true, detail: 'no such usage' };
+  },
+
+  // A rule that carries a fact rather than a verdict. Always passes; the detail is the point.
+  engineNote(f, a) {
+    return { ok: true, detail: a.note };
   },
 
   manual(f, a) {

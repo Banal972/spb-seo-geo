@@ -39,11 +39,13 @@ export function loadCatalog(path = CATALOG_PATH) {
 
 export const daysSince = (d) => Math.floor((Date.now() - new Date(d + 'T00:00:00Z').getTime()) / 86400000);
 
-// Rules that do not match the market are not evaluated, but they are never hidden (invariant 7).
-export function partitionByMarket(rules, market) {
+// Rules that do not match the detected markets are not evaluated, but they are never
+// hidden (invariant 7). `markets` is an array: a site can target several regions at once.
+export function partitionByMarket(rules, markets = []) {
+  const set = new Set(Array.isArray(markets) ? markets : [markets].filter(Boolean));
   const active = [], skipped = [];
   for (const r of rules) {
-    if (r.market === 'kr' && market !== 'kr') skipped.push(r);
+    if (r.market && r.market !== 'all' && !set.has(r.market)) skipped.push(r);
     else active.push(r);
   }
   return { active, skipped };

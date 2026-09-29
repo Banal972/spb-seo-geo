@@ -19,7 +19,7 @@ The scripts bundled with this skill make the verdict. **You run a command and tr
 Run them relative to this skill folder. `<DIR>` = the directory holding this SKILL.md.
 
 ```
-node <DIR>/scripts/scan.mjs   --url <SITE> [--dir <project>] [--market auto|kr|global] [--verbose] [--json]
+node <DIR>/scripts/scan.mjs   --url <SITE> [--dir <project>] [--market kr|jp|kr,jp|global] [--save] [--verbose] [--json]
 node <DIR>/scripts/apply.mjs  --url <SITE> [--write] [--ai-policy open|cite-only|closed]
                               [--google-token X] [--naver-token X] [--bing-token X] [--with-llms-txt]
 node <DIR>/scripts/todo.mjs   --url <SITE>
@@ -38,7 +38,7 @@ Requires Node 20+. If it is missing, say so in one line and stop.
 
 ## Language
 
-**Answer in whatever language the user is writing in.** This skill and its reports are English, but that is an implementation detail — the report is an intermediate artifact, not the answer. Never paste report lines verbatim to a user who is writing in another language; translate the problem and the action into their language. Keep rule IDs (`GEO-01`), user-agent names and file paths as-is.
+**Answer in whatever language the user writes in.** The report is an intermediate artifact, not the answer — translate its findings rather than pasting lines verbatim. Keep rule IDs, user-agent names and paths as-is.
 
 ## Reading the report
 
@@ -54,18 +54,21 @@ Requires Node 20+. If it is missing, say so in one line and stop.
 - `[evidence: primary]` = official search-engine documentation · `secondary` = research or industry measurement · `low` = correlation only. **Relay the grade as given.**
 - Exit codes: `0` all clear · `1` critical present · `2` warnings only · `3` execution error
 
-## market — decides whether Naver is checked
+## Regional engines — ask, do not guess
 
-The report states the verdict and its basis as a sentence. If it is `undecided` (for example a freshly deployed site), **ask the user once**: "Does this site target Korean users?"
+Google and Bing always apply. **Naver (Korea)** and **Yahoo! JAPAN (Japan)** are opt-in, because which countries someone wants traffic from is a business decision, not something you can read off their HTML.
 
-- Yes → re-run with `--market=kr`. The answer is stored in `.spb-seo-geo.json` so it is never asked again.
-- No → `--market=global`. Only the 4 Naver-only rules drop out; the other 33 still run.
+If the report says `Regional engines: NOT SET`, **ask the user once**: should this cover Naver (Korea) and/or Yahoo! JAPAN (Japan)? The report lists any signals it saw (`100% Hangul`, `.jp domain`, a `naver-site-verification` tag) — offer them as the likely answer, but let the user decide. Re-run with `--market=kr | jp | kr,jp | global` plus `--save`, which writes the answer to `.spb-seo-geo.json` so you never ask again.
+
+- **`kr`** adds 4 real rules: ownership, the `Yeti` crawler, RSS (still a first-class input for Naver), and console steps that must be done in order. Mention the ~2-week indexing delay.
+- **`jp`** adds almost nothing, and that is the honest answer: **Yahoo! JAPAN runs on Google's index**, so the GOOGLE findings already cover it; only its own `Y!J-*` crawlers are extra. Yahoo elsewhere runs on Bing.
 
 ## Read these only when you need detail (not before)
 
 - `<DIR>/references/google.md` — Google, AI Overviews citation eligibility, snippet controls
 - `<DIR>/references/naver.md` — Search Advisor order, Yeti, RSS, the two-week delay
 - `<DIR>/references/bing.md` — Bing ownership, the GSC-import shortcut
+- `<DIR>/references/yahoo.md` — why Yahoo needs almost no rules of its own
 - `<DIR>/references/geo.md` — AI crawler user agents, training vs citation, evidence grades
 
 ## The two that come up most

@@ -8,9 +8,9 @@ const statusFor = (ok, severity) => {
   return severity === 'critical' ? 'fail' : severity === 'warn' ? 'warn' : 'info';
 };
 
-export function judge(facts, { market, aiPolicy = 'open' } = {}) {
+export function judge(facts, { markets = [], aiPolicy = 'open' } = {}) {
   const { rules, rejected, stale } = loadCatalog();
-  const { active, skipped } = partitionByMarket(rules, market);
+  const { active, skipped } = partitionByMarket(rules, markets);
   facts.aiPolicy = aiPolicy;
 
   const findings = [];
@@ -37,7 +37,7 @@ export function judge(facts, { market, aiPolicy = 'open' } = {}) {
 
   return {
     findings, counts,
-    skippedRules: skipped.map((r) => ({ id: r.id, engine: r.engine, problem: r.problem })),
+    skippedRules: skipped.map((r) => ({ id: r.id, engine: r.engine, market: r.market, problem: r.problem })),
     meta: { total: rules.length, rejected, stale: stale.map((r) => r.id) },
   };
 }

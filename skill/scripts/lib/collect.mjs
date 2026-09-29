@@ -84,7 +84,7 @@ export async function collect({ url, config = {}, options = {} }) {
   if (declaredFeeds.length) {
     const res = await pool(declaredFeeds.slice(0, 2), (u) => get(u));
     facts.feeds = res.map((r) => ({ url: r.requested, res: r, parsed: r.ok ? parseFeed(r.body) : null, declared: true }));
-  } else if (facts.market.market === 'kr') {
+  } else if (facts.market.markets.includes('kr')) {
     log('· probing conventional RSS paths (market=kr)');
     const res = await pool(FEED_PATHS.map((p) => abs(origin, p)), (u) => get(u));
     facts.feeds = res.filter((r) => r.ok).map((r) => ({ url: r.requested, res: r, parsed: parseFeed(r.body), declared: false }));

@@ -10,10 +10,10 @@ test('no rule is rejected by the linter', () => {
 });
 
 test('rule count and composition', () => {
-  assert.equal(rules.length, 37);
+  assert.equal(rules.length, 39);
   const by = {};
   for (const r of rules) by[r.engine] = (by[r.engine] || 0) + 1;
-  assert.deepEqual(by, { core: 16, google: 7, naver: 4, bing: 3, ai: 7 });
+  assert.deepEqual(by, { core: 16, google: 7, naver: 4, bing: 3, ai: 7, yahoo: 2 });
 });
 
 test('every rule carries an evidence URL and a grade', () => {
@@ -36,18 +36,20 @@ test('the linter rejects a rule without evidence', () => {
   assert.ok(errs.some((e) => e.includes('evidence')));
 });
 
-test('market=global skips only the 4 Naver-specific rules', () => {
-  const { active, skipped } = partitionByMarket(rules, 'global');
-  assert.equal(skipped.length, 4);
+test('no regional answer skips exactly the regional rules', () => {
+  const { active, skipped } = partitionByMarket(rules, []);
+  assert.equal(skipped.length, 6, 'Naver 4 + Yahoo 2');
   assert.equal(active.length, 33);
-  assert.ok(skipped.every((r) => r.engine === 'naver'));
-  // IndexNow key and Open Graph live in CORE, so non-Korean sites still get them
+  assert.ok(skipped.every((r) => ['naver', 'yahoo'].includes(r.engine)));
+  // IndexNow key and Open Graph live in CORE, so a site with no regional answer still gets them
   assert.ok(active.some((r) => r.id === 'CORE-16'));
   assert.ok(active.some((r) => r.id === 'CORE-15'));
 });
 
-test('market=kr evaluates every rule', () => {
-  assert.equal(partitionByMarket(rules, 'kr').active.length, 37);
+test('markets are additive', () => {
+  assert.equal(partitionByMarket(rules, ['kr']).active.length, 37);
+  assert.equal(partitionByMarket(rules, ['jp']).active.length, 35);
+  assert.equal(partitionByMarket(rules, ['kr', 'jp']).active.length, 39);
 });
 
 test('reports rules unverified for over 180 days', () => {

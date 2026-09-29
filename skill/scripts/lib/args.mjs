@@ -2,7 +2,7 @@
 export const EXIT = { OK: 0, CRITICAL: 1, WARN: 2, ERROR: 3 };
 
 const BOOL = new Set([
-  'json', 'verbose', 'write', 'yes', 'force', 'with-llms-txt', 'help', 'dry-run', 'lint',
+  'json', 'verbose', 'write', 'yes', 'force', 'with-llms-txt', 'help', 'dry-run', 'lint', 'save',
 ]);
 
 export function parseArgs(argv = process.argv.slice(2)) {
