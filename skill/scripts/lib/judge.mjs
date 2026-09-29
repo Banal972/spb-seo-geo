@@ -8,7 +8,7 @@ const statusFor = (ok, severity) => {
   return severity === 'critical' ? 'fail' : severity === 'warn' ? 'warn' : 'info';
 };
 
-export function judge(facts, { markets = [], aiPolicy = 'open' } = {}) {
+export function judge(facts, { markets = null, aiPolicy = 'open' } = {}) {
   const { rules, rejected, stale } = loadCatalog();
   const { active, skipped } = partitionByMarket(rules, markets);
   facts.aiPolicy = aiPolicy;
@@ -22,7 +22,7 @@ export function judge(facts, { markets = [], aiPolicy = 'open' } = {}) {
       res = { ok: null, detail: `checker error: ${String(e?.message || e)}` };
     }
     findings.push({
-      id: rule.id, engine: rule.engine, severity: rule.severity, grade: rule.grade,
+      id: rule.id, engine: rule.engine, region: rule.region || null, severity: rule.severity, grade: rule.grade,
       status: statusFor(res.ok, rule.severity),
       detail: res.detail || '',
       problem: rule.problem, action: rule.action, evidence: rule.evidence,
@@ -37,7 +37,7 @@ export function judge(facts, { markets = [], aiPolicy = 'open' } = {}) {
 
   return {
     findings, counts,
-    skippedRules: skipped.map((r) => ({ id: r.id, engine: r.engine, market: r.market, problem: r.problem })),
+    skippedRules: skipped.map((r) => ({ id: r.id, engine: r.engine, region: r.region, problem: r.problem })),
     meta: { total: rules.length, rejected, stale: stale.map((r) => r.id) },
   };
 }

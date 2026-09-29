@@ -21,12 +21,12 @@ test('parseMarkets normalises input', () => {
   assert.equal(parseMarkets('zz'), null);
 });
 
-test('nothing is evaluated until the user answers — signals only suggest', () => {
+test('signals are a nudge, never a gate', () => {
   const m = detect('https://a.co.kr', '<html lang="ko"><body>안녕하세요 검색 노출 안내</body></html>');
-  assert.deepEqual(m.markets, [], 'no regional rules run on a guess');
   assert.equal(m.answered, false);
+  assert.deepEqual(m.markets, [], 'no answer yet');
   assert.ok(m.suggested.kr, 'but Korea is suggested');
-  assert.match(marketSentence(m).join('\n'), /ASK THE USER/);
+  assert.match(marketSentence(m).join('\n'), /Regional signals/);
 });
 
 test('Korean suggestion survives lang=en — the costliest misjudgment', () => {
@@ -62,9 +62,12 @@ test('script ratios separate Korean, Japanese, Chinese and latin', () => {
   assert.equal(scriptRatios('latin only').hangul, 0);
 });
 
-test('an answered global site still reports what the signals said', () => {
+test('an explicit global answer says the regional steps are hidden', () => {
   const m = { ...marketPhase1({ option: 'global', url: 'https://a.kr' }), suggested: { kr: ['a.kr domain'] } };
-  const text = marketSentence(m).join('\n');
-  assert.match(text, /Regional engines: none/);
-  assert.match(text, /--market=kr/);
+  assert.match(marketSentence(m).join('\n'), /hidden/);
+});
+
+test('no signal and no answer means no sentence at all — nothing to say', () => {
+  const m = detect('https://a.com', '<html lang="en"><body>Hello world, a plain english page.</body></html>');
+  assert.deepEqual(marketSentence(m), []);
 });

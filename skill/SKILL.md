@@ -1,40 +1,55 @@
 ---
 name: spbseo
-description: Audits and configures a site's search and AI visibility (SEO/GEO). Use it when pages are not showing up in search, right after a deploy, for Google Search Console / Naver Search Advisor / Bing registration, for robots.txt, sitemaps, RSS, IndexNow, canonical, Open Graph and indexing checks, and to make a site citable by AI answer engines.
+description: Audits and configures a site's search and AI visibility (SEO/GEO). Use it when pages are not showing up in search, right after a deploy, for Google Search Console / Bing / Naver Search Advisor / Yahoo! JAPAN setup, for robots.txt, sitemaps, RSS, IndexNow, canonical, Open Graph and indexing checks, and to make a site citable by AI answer engines.
 ---
 
 # spbseo — audit and configure search + AI visibility
 
-The scripts bundled with this skill make the verdict. **You run a command and translate the result into plain language.**
+The scripts bundled with this skill make the verdict. **You gather a few answers, run a command, and translate the result into plain language.** `<DIR>` = the directory holding this SKILL.md.
 
 ## Never do this
 
-- Do **not** fetch or read the site's HTML, robots.txt or sitemap.xml yourself. The script already judged them.
-- Do not web-search for SEO advice. Every rule carries its evidence URL in the catalog.
-- Do not invent a score. Report counts and severities only.
+- Do **not** fetch or read the site's HTML, robots.txt or sitemap yourself. The script already judged them.
+- Do not web-search for SEO advice. Every rule carries its evidence URL.
+- Do not invent a score. Report counts and severities.
 - Do not enumerate passing rules. Say `✅ N pass` in one line.
+- Never pass `--write` without the user's approval.
 
-## Commands
+## Intake — ask before the first run
 
-Run them relative to this skill folder. `<DIR>` = the directory holding this SKILL.md.
+If `.spb-seo-geo.json` does not exist yet, ask for these **first**, in one message. They cannot be inferred, and with them in hand the setup finishes in one pass instead of handing half the work back.
+
+1. **Site URL** — required.
+2. **Countries that matter.** Google and Bing always apply. Korea (Naver) and Japan (Yahoo! JAPAN) add optional console work — ask whether either applies. `--market=kr,jp` or `--market=global`.
+3. **Verification tokens, if they already have them** — Google Search Console, Bing, Naver Search Advisor. Tell them these are the strings from each console's "HTML tag" option, and that they can skip any they have not signed up for yet.
+4. **AI training policy** — `open` (default, maximum visibility), `cite-only` (block training, stay citable), `closed` (block both — warn them this removes the site from AI answers).
+5. Optional: an RSS feed (`--with-rss`, mainly useful for Naver) and `llms.txt` (`--with-llms-txt`, which Google says is unnecessary).
+
+Then run setup. Without `--write` it changes nothing and shows a preview:
 
 ```
-node <DIR>/scripts/scan.mjs   --url <SITE> [--dir <project>] [--market kr|jp|kr,jp|global] [--save] [--verbose] [--json]
-node <DIR>/scripts/apply.mjs  --url <SITE> [--write] [--ai-policy open|cite-only|closed]
-                              [--google-token X] [--naver-token X] [--bing-token X] [--with-llms-txt]
-node <DIR>/scripts/todo.mjs   --url <SITE>
-node <DIR>/scripts/submit.mjs --url <SITE> [--urls a,b | --since HEAD~1]
+node <DIR>/scripts/setup.mjs --url <SITE> [--market kr,jp|global] [--ai-policy open|cite-only|closed] \
+     [--google-token X] [--bing-token X] [--naver-token X] [--with-rss] [--with-llms-txt] [--write]
+```
+
+Everything is saved, so later runs need no flags:
+
+```
+node <DIR>/scripts/scan.mjs     [--verbose] [--json]     audit only
+node <DIR>/scripts/apply.mjs    [--write]                configure files
+node <DIR>/scripts/todo.mjs                              what only a human can do
+node <DIR>/scripts/submit.mjs   [--since HEAD~1]         tell IndexNow about new pages
 ```
 
 Requires Node 20+. If it is missing, say so in one line and stop.
 
 ## Order of work
 
-1. **`scan`** — always start here. If no deployed URL is known, ask the user; without it the remote rules stay unchecked.
-2. Explain the failures (`❌`) in plain language. Report warnings and notes as counts, and use `--verbose` only when the user wants detail.
-3. **`apply`** — run it plain first to show the diff, then add `--write` once the user approves. Never pass `--write` without approval.
-4. **`todo`** — work only a human can do in the consoles. Pass along the order, the time estimates and the indexing delay as given.
-5. **`submit`** — after deploying new pages, notify IndexNow. Google does not participate, so never claim you notified Google.
+1. **Intake → `setup`** (no `--write`). Show the failures and the file preview.
+2. Get approval, then **`setup --write`** — or `apply --write` on later runs.
+3. Relay **`todo`**: the required console steps first, then the optional regional ones. Pass along the order and the ~2-week Naver indexing delay as given.
+4. After the user deploys, **`scan`** again to confirm against the live site.
+5. When they publish new pages, **`submit`**. Google does not participate in IndexNow — never claim you notified Google.
 
 ## Language
 
@@ -46,32 +61,24 @@ Requires Node 20+. If it is missing, say so in one line and stop.
 | --- | --- | --- |
 | `✅` | pass | count only |
 | `⚠️` | warning | count, plus detail on request |
-| `·` | note | count only; these rest on weaker evidence |
+| `·` | note | count only; weaker evidence or optional |
 | `❌` | critical failure | **always explain it.** Something is blocking visibility |
-| `?` | could not check | **not a pass.** Pass along why it could not be checked |
-| `⏭` | skipped | not evaluated because it does not apply. Mention it in one line; never hide it |
+| `?` | could not check | **not a pass.** Say why it could not be checked |
+| `⏭` | hidden by a filter | mention in one line; never hide it |
 
-- `[evidence: primary]` = official search-engine documentation · `secondary` = research or industry measurement · `low` = correlation only. **Relay the grade as given.**
-- Exit codes: `0` all clear · `1` critical present · `2` warnings only · `3` execution error
+`[evidence: primary]` = official search-engine documentation · `secondary` = research or industry measurement · `low` = correlation only. **Relay the grade as given.**
 
-## Regional engines — ask, do not guess
+Exit codes: `0` all clear · `1` critical present · `2` warnings only · `3` execution error
 
-Google and Bing always apply. **Naver (Korea)** and **Yahoo! JAPAN (Japan)** are opt-in, because which countries someone wants traffic from is a business decision, not something you can read off their HTML.
+## Regions
 
-If the report says `Regional engines: NOT SET`, **ask the user once**: should this cover Naver (Korea) and/or Yahoo! JAPAN (Japan)? The report lists any signals it saw (`100% Hangul`, `.jp domain`, a `naver-site-verification` tag) — offer them as the likely answer, but let the user decide. Re-run with `--market=kr | jp | kr,jp | global` plus `--save`, which writes the answer to `.spb-seo-geo.json` so you never ask again.
+Every rule runs for every site — allowing a regional crawler costs nothing. Only the work that needs a console account is regional, and it appears in `todo` under "Optional". Notably: **Yahoo! JAPAN web search runs on Google's index**, so the GOOGLE findings already cover Japan and there is no separate console. Yahoo elsewhere runs on Bing.
 
-- **`kr`** adds 4 real rules: ownership, the `Yeti` crawler, RSS (still a first-class input for Naver), and console steps that must be done in order. Mention the ~2-week indexing delay.
-- **`jp`** adds almost nothing, and that is the honest answer: **Yahoo! JAPAN runs on Google's index**, so the GOOGLE findings already cover it; only its own `Y!J-*` crawlers are extra. Yahoo elsewhere runs on Bing.
+## Read only when you need detail
 
-## Read these only when you need detail (not before)
-
-- `<DIR>/references/google.md` — Google, AI Overviews citation eligibility, snippet controls
-- `<DIR>/references/naver.md` — Search Advisor order, Yeti, RSS, the two-week delay
-- `<DIR>/references/bing.md` — Bing ownership, the GSC-import shortcut
-- `<DIR>/references/yahoo.md` — why Yahoo needs almost no rules of its own
-- `<DIR>/references/geo.md` — AI crawler user agents, training vs citation, evidence grades
+`<DIR>/references/` — `google.md` · `naver.md` · `bing.md` · `yahoo.md` · `geo.md`
 
 ## The two that come up most
 
-- **`GEO-01` citation bots blocked** — `ClaudeBot` (training) and `Claude-SearchBot` (citation) are separate tokens. Blocking the citation bot removes the site from AI answers entirely. This is the most expensive mistake in the catalog.
-- **`GOOGLE-03` snippets suppressed** — with `nosnippet` or `max-snippet:0`, the page is categorically ineligible for AI Overviews citation.
+- **`GEO-01`** — `ClaudeBot` (training) and `Claude-SearchBot` (citation) are separate tokens. Blocking the citation bot removes the site from AI answers entirely.
+- **`GOOGLE-03`** — with `nosnippet` or `max-snippet:0` a page is categorically ineligible for AI Overviews citation.

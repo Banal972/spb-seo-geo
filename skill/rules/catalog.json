@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
   "updated": "2026-09-29",
-  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification.",
+  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification. Rules are evaluated for every site: allowing a crawler is free regardless of target market. Region-specific work that depends on registering with a console is reported as info and routed to todo, never as a failure.",
   "rules": [
     {
       "id": "CORE-01",
@@ -253,7 +253,7 @@
     {
       "id": "GOOGLE-01",
       "engine": "google",
-      "severity": "warn",
+      "severity": "info",
       "autofix": true,
       "market": "all",
       "check": "metaPresent",
@@ -370,9 +370,9 @@
     {
       "id": "NAVER-01",
       "engine": "naver",
-      "severity": "warn",
+      "severity": "info",
       "autofix": true,
-      "market": "kr",
+      "market": "all",
       "check": "metaPresent",
       "args": {
         "names": [
@@ -382,18 +382,19 @@
         "reason": "ownership may already be verified by the HTML file method, and that filename cannot be guessed"
       },
       "fix": "meta-verify-naver",
-      "problem": "naver-site-verification meta tag is absent",
-      "action": "Pass the token from Search Advisor as --naver-token and we will place it in <head>. Ignore this if you already verified with the HTML file method",
+      "problem": "Naver ownership verification tag is absent",
+      "action": "Only needed if you want Korean traffic. Register at Search Advisor, then pass the token as --naver-token and we will place the tag",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
-      "checked": "2026-09-29"
+      "checked": "2026-09-29",
+      "region": "kr"
     },
     {
       "id": "NAVER-02",
       "engine": "naver",
       "severity": "critical",
       "autofix": false,
-      "market": "kr",
+      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [
@@ -401,7 +402,7 @@
         ]
       },
       "problem": "Naver's crawler Yeti is blocked in robots.txt",
-      "action": "Unblock Yeti. While blocked the site cannot appear in Naver search or AI Briefing at all",
+      "action": "Unblock it. Allowing Yeti costs nothing even if you do not target Korea, and a block here is almost always accidental",
       "evidence": "https://searchadvisor.naver.com/guide/seo-basic-robots",
       "grade": "secondary",
       "checked": "2026-09-29"
@@ -409,24 +410,26 @@
     {
       "id": "NAVER-03",
       "engine": "naver",
-      "severity": "warn",
+      "severity": "info",
       "autofix": true,
-      "market": "kr",
+      "market": "all",
       "check": "rssPresent",
       "args": {},
       "fix": "rss",
-      "problem": "no RSS feed",
-      "action": "Generate one. RSS is nearly meaningless to Google and Bing, but Naver still treats it as a first-class input",
+      "problem": "no RSS feed (Naver still treats RSS as a first-class input)",
+      "action": "Only needed if you want Korean traffic. Run apply --with-rss to generate one",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
-      "checked": "2026-09-29"
+      "checked": "2026-09-29",
+      "region": "kr",
+      "optIn": true
     },
     {
       "id": "NAVER-04",
       "engine": "naver",
       "severity": "info",
       "autofix": false,
-      "market": "kr",
+      "market": "all",
       "check": "manual",
       "args": {
         "todo": [
@@ -450,16 +453,17 @@
           }
         ]
       },
-      "problem": "Search Advisor registration, RSS and sitemap submission cannot be verified",
-      "action": "There is no public API. Do it in the console in order: ownership, then RSS, then sitemap",
+      "problem": "Naver Search Advisor registration cannot be verified from outside",
+      "action": "Only needed if you want Korean traffic. There is no public API, so do it in the console in order: ownership, RSS, sitemap",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
-      "checked": "2026-09-29"
+      "checked": "2026-09-29",
+      "region": "kr"
     },
     {
       "id": "BING-01",
       "engine": "bing",
-      "severity": "warn",
+      "severity": "info",
       "autofix": true,
       "market": "all",
       "check": "metaPresent",
@@ -651,7 +655,7 @@
       "engine": "yahoo",
       "severity": "warn",
       "autofix": false,
-      "market": "jp",
+      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [
@@ -662,24 +666,8 @@
         ]
       },
       "problem": "Yahoo! JAPAN's own crawlers are blocked in robots.txt",
-      "action": "Unblock the Y!J-* family. Yahoo! JAPAN web search runs on Google's index, so GOOGLE rules cover ranking, but these crawlers feed Yahoo! JAPAN's own surfaces",
+      "action": "Unblock the Y!J-* family. Allowing them costs nothing, and Yahoo! JAPAN web search itself runs on Google's index",
       "evidence": "https://radar.cloudflare.com/bots/directory/yahoojapan",
-      "grade": "secondary",
-      "checked": "2026-09-29"
-    },
-    {
-      "id": "YAHOO-02",
-      "engine": "yahoo",
-      "severity": "info",
-      "autofix": false,
-      "market": "jp",
-      "check": "engineNote",
-      "args": {
-        "note": "Yahoo! JAPAN web search is powered by Google's index (about a third of Japan's search market), so your GOOGLE findings above apply to it. There is no separate submission console — use Google Search Console. Yahoo outside Japan is powered by Bing, so BING findings apply there."
-      },
-      "problem": "how Yahoo is covered",
-      "action": "Nothing to do here. Fix the GOOGLE items to improve Yahoo! JAPAN, and the BING items to improve Yahoo elsewhere",
-      "evidence": "https://www.theegg.com/seo/japan/google-yahoo-japan-partnership/",
       "grade": "secondary",
       "checked": "2026-09-29"
     }

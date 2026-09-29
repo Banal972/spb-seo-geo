@@ -10,10 +10,10 @@ test('no rule is rejected by the linter', () => {
 });
 
 test('rule count and composition', () => {
-  assert.equal(rules.length, 39);
+  assert.equal(rules.length, 38);
   const by = {};
   for (const r of rules) by[r.engine] = (by[r.engine] || 0) + 1;
-  assert.deepEqual(by, { core: 16, google: 7, naver: 4, bing: 3, ai: 7, yahoo: 2 });
+  assert.deepEqual(by, { core: 16, google: 7, naver: 4, bing: 3, ai: 7, yahoo: 1 });
 });
 
 test('every rule carries an evidence URL and a grade', () => {
@@ -36,20 +36,31 @@ test('the linter rejects a rule without evidence', () => {
   assert.ok(errs.some((e) => e.includes('evidence')));
 });
 
-test('no regional answer skips exactly the regional rules', () => {
-  const { active, skipped } = partitionByMarket(rules, []);
-  assert.equal(skipped.length, 6, 'Naver 4 + Yahoo 2');
-  assert.equal(active.length, 33);
-  assert.ok(skipped.every((r) => ['naver', 'yahoo'].includes(r.engine)));
-  // IndexNow key and Open Graph live in CORE, so a site with no regional answer still gets them
+test('by default every rule is evaluated — no market gate', () => {
+  const { active, skipped } = partitionByMarket(rules, null);
+  assert.equal(skipped.length, 0, 'nothing is hidden unless asked');
+  assert.equal(active.length, rules.length);
+});
+
+test('allowing a regional crawler is checked for everyone', () => {
+  const { active } = partitionByMarket(rules, ['jp']);
+  // Yeti is Korea's crawler but unblocking it is free, so it must not be gated away
+  assert.ok(active.some((r) => r.id === 'NAVER-02'), 'Yeti check is universal');
+  assert.ok(active.some((r) => r.id === 'YAHOO-01'), 'Y!J check is universal');
+});
+
+test('a market filter only hides optional console advice', () => {
+  const { active, skipped } = partitionByMarket(rules, ['jp']);
+  assert.ok(skipped.every((r) => r.region === 'kr'));
+  assert.deepEqual(skipped.map((r) => r.id).sort(), ['NAVER-01', 'NAVER-03', 'NAVER-04']);
   assert.ok(active.some((r) => r.id === 'CORE-16'));
   assert.ok(active.some((r) => r.id === 'CORE-15'));
 });
 
-test('markets are additive', () => {
-  assert.equal(partitionByMarket(rules, ['kr']).active.length, 37);
-  assert.equal(partitionByMarket(rules, ['jp']).active.length, 35);
-  assert.equal(partitionByMarket(rules, ['kr', 'jp']).active.length, 39);
+test('registration-dependent regional rules can never read as failures', () => {
+  for (const r of rules.filter((x) => x.region)) {
+    assert.equal(r.severity, 'info', `${r.id} must be info, not ${r.severity}`);
+  }
 });
 
 test('reports rules unverified for over 180 days', () => {

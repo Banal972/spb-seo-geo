@@ -4,19 +4,24 @@ English · **[한국어](./README.ko.md)**
 
 An **agent skill that audits and configures a site's search and AI visibility** — Google Search Console, Bing Webmaster Tools, Naver Search Advisor, Yahoo! JAPAN, plus AI answer citation (GEO/AEO) — in one pass.
 
-Google and Bing always apply. Regional engines are **opt-in**: the skill asks once whether you want Korea (Naver) and/or Japan (Yahoo! JAPAN), remembers the answer, and never guesses on your behalf.
+It asks what it cannot infer — your URL, which countries matter, your console verification tokens — **once, up front**, then configures everything from those answers and hands you only the steps that genuinely require a human.
 
 ```
 npx spb-seo-geo     # install: pick only the harnesses you use, 2 questions
 /spbseo             # from then on, just this
 ```
 
+On the first run the agent asks for the site URL, the countries you care about, your
+verification tokens and your AI-training policy. Everything is saved to
+`.spb-seo-geo.json`, so every later run needs nothing at all.
+
 ## What makes it different
 
 | | |
 | --- | --- |
 | **Code makes the verdict, not the model** | The agent never reads your HTML, robots.txt or sitemap. One audit costs about as many tokens as reading a single report, and the same site always yields the **same result** — even if you swap the model underneath. |
-| **Regional engines, asked not guessed** | Most tools skip Korea's dominant engine entirely. This one covers Naver properly — but which countries you want traffic from is a business decision, not something readable from your HTML. So it reports the signals it saw (`100% Hangul`, `.jp domain`, a `naver-site-verification` tag) and asks. Until you answer, regional rules are listed as not evaluated rather than silently included or dropped. |
+| **Finishes the job instead of listing it** | Ask for the verification tokens up front and the tool can place them, instead of printing "add this yourself". For frameworks that own `<head>`, it emits the form you can actually paste — a Next.js `metadata.verification` object, not a raw `<meta>` tag. |
+| **Regional work is optional, never a failure** | Every rule runs for every site, because allowing a regional crawler costs nothing. Only work that needs a console account is regional, and it lands in `todo` under "Optional" — a site that ignores Korea never sees a Naver *failure*. Signals (`100% Hangul`, `.jp domain`) are shown as a nudge, not a gate. |
 | **Yahoo, described honestly** | Yahoo has no index of its own: **Yahoo! JAPAN runs on Google's**, and Yahoo elsewhere runs on **Bing**. So "optimise for Yahoo" is not a real task, and inventing a Yahoo rule group would mean rules with no evidence. Japan adds exactly one real check (Yahoo! JAPAN's own `Y!J-*` crawlers) plus a note pointing at the Google findings. |
 | **No rule without evidence** | All 37 rules carry an evidence URL and a grade (primary = official docs, secondary = research/measurement, low = correlation only). A rule missing either is **not even loaded**. |
 | **No score** | There is no defensible way to weight 37 rules into a number, so we don't. You get counts and severities. |
@@ -46,18 +51,20 @@ npx spb-seo-geo --list-agents
 ## Commands
 
 ```bash
-node <skill>/scripts/scan.mjs   --url https://example.com [--market kr|jp|kr,jp|global] [--save] [--verbose] [--json]
-node <skill>/scripts/apply.mjs  --url https://example.com [--write] [--ai-policy open|cite-only|closed]
-node <skill>/scripts/todo.mjs   --url https://example.com
-node <skill>/scripts/submit.mjs --url https://example.com --since HEAD~1
+node <skill>/scripts/setup.mjs  --url https://example.com [--market kr,jp|global] [--ai-policy open|cite-only|closed] \
+                                [--google-token X] [--bing-token X] [--naver-token X] [--with-rss] [--write]
+node <skill>/scripts/scan.mjs   [--verbose] [--json]
+node <skill>/scripts/apply.mjs  [--write]
+node <skill>/scripts/todo.mjs
+node <skill>/scripts/submit.mjs [--since HEAD~1]
 ```
 
-You normally reach these through `/spbseo` rather than typing them. Requires Node 20+.
+You normally reach these through `/spbseo` rather than typing them. `setup` saves your answers and then runs the audit, the file preview and the todo list in one pass. Requires Node 20+.
 
 - `apply` **previews by default.** Nothing changes without `--write`; existing files are backed up to `.bak`, and only the region inside the `# >>> spb-seo-geo` markers is touched.
 - `submit` notifies **Bing, Naver, Yandex and Seznam** over IndexNow. Google does not participate, so it never claims otherwise.
 
-## What gets checked (39 rules)
+## What gets checked (38 rules)
 
 | Group | Count | Covers |
 | --- | --- | --- |
@@ -65,10 +72,10 @@ You normally reach these through `/spbseo` rather than typing them. Requires Nod
 | GOOGLE | 7 | ownership · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API misuse |
 | BING | 3 | ownership · bingbot · registration (with the GSC-import shortcut) |
 | GEO | 7 | **citation bots allowed** · training-bot policy · user-triggered bots · text form · internal links · citation signals |
-| NAVER | 4 | ownership · **Yeti blocking** · RSS · console registration (unverifiable) — `--market=kr` |
-| YAHOO | 2 | Yahoo! JAPAN's `Y!J-*` crawlers · a note on what actually covers Yahoo — `--market=jp` |
+| NAVER | 4 | **Yeti blocking** (checked for everyone) · ownership · RSS · console registration — the last three are optional advice, never failures |
+| YAHOO | 1 | Yahoo! JAPAN's own `Y!J-*` crawlers (checked for everyone — allowing them is free) |
 
-33 of them apply everywhere. The 6 regional ones only run once you say the region applies.
+35 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Korea, reported as notes and routed to `todo`.
 
 The two that fire most often:
 

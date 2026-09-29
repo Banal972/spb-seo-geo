@@ -14,10 +14,12 @@ const WRITE = !!args.write;
 try {
   const { facts, result, config, root, fw, aiPolicy } = await run(args);
 
+  const optIn = (fix) => (fix === 'rss' ? (args['with-rss'] || config.withRss) : fix === 'llmstxt' ? (args['with-llms-txt'] || config.withLlmsTxt) : false);
+
   const needs = new Set(
     result.findings
       .filter((f) => f.fixable && f.status !== 'pass' && (f.status !== 'unknown' || f.fix?.startsWith('meta-verify')))
-      .filter((f) => !f.optIn || args['with-llms-txt'])
+      .filter((f) => !f.optIn || optIn(f.fix))
       .map((f) => f.fix)
   );
 
@@ -95,23 +97,34 @@ try {
   }
 
   // Ownership verification meta: only when a token was provided
-  const verify = [
-    ['meta-verify-google', 'google-site-verification', args['google-token'], 'google'],
-    ['meta-verify-naver', 'naver-site-verification', args['naver-token'], 'naver'],
-    ['meta-verify-bing', 'msvalidate.01', args['bing-token'], 'bing'],
-  ];
-  for (const [fix, name, token, flag] of verify) {
+  const tok = config.tokens || {};
+  const wanted = { google: args['google-token'] || tok.google, naver: args['naver-token'] || tok.naver, bing: args['bing-token'] || tok.bing };
+  const NEEDS_VERIFY = { 'meta-verify-google': 'google', 'meta-verify-naver': 'naver', 'meta-verify-bing': 'bing' };
+  const have = {}, missing = [];
+  for (const [fix, key] of Object.entries(NEEDS_VERIFY)) {
     if (!needs.has(fix)) continue;
-    if (!token) { snippets.push({ title: name, body: `Pass the token from the console as --${flag}-token=... and we will emit the <head> tag for you.` }); continue; }
-    const tag = gen.verifyMeta(name, String(token));
+    if (wanted[key]) have[key] = wanted[key];
+    else missing.push(key);
+  }
+
+  if (Object.keys(have).length) {
     const idx = pub && join(pub, 'index.html');
     if (fw.name === 'Static' && idx && existsSync(idx)) {
-      const html = readFileSync(idx, 'utf8');
-      if (html.includes(name)) continue;
-      plan.push({ path: idx, content: html.replace(/<head([^>]*)>/i, `<head$1>\n    ${tag}`), mode: 'merge', note: name });
+      let html = readFileSync(idx, 'utf8');
+      const tags = Object.entries(have)
+        .map(([k, v]) => gen.verifyMeta({ google: 'google-site-verification', naver: 'naver-site-verification', bing: 'msvalidate.01' }[k], v))
+        .filter((t) => !html.includes(t));
+      if (tags.length) plan.push({ path: idx, content: html.replace(/<head([^>]*)>/i, `<head$1>\n    ${tags.join('\n    ')}`), mode: 'merge', note: 'ownership tags' });
     } else {
-      snippets.push({ title: `${name} — add to <head>`, body: tag });
+      const sn = gen.verifySnippet(fw.name, have);
+      snippets.push({ title: `Ownership verification — ${sn.how}`, body: sn.body });
     }
+  }
+  if (missing.length) {
+    snippets.push({
+      title: 'Ownership verification — tokens not provided yet',
+      body: `Get the HTML-tag token from each console and re-run:\n  setup ${missing.map((k) => `--${k}-token=…`).join(' ')} --write`,
+    });
   }
 
   if (needs.has('meta-og')) {
@@ -121,7 +134,7 @@ try {
     });
   }
 
-  if (needs.has('llmstxt') && args['with-llms-txt']) {
+  if (needs.has('llmstxt') && optIn('llmstxt')) {
     const pages = (facts.samples.length ? facts.samples : [facts.home]).filter((p) => p?.parsed).map((p) => ({ url: p.url, title: p.parsed.title }));
     const target = pub && join(pub, 'llms.txt');
     const content = gen.llmsTxt({ title: facts.home?.parsed?.title, origin, pages });

@@ -16,7 +16,8 @@ export function renderScan(result, facts, opts = {}) {
     `${result.findings.length + c.skipped} rules`,
   ];
   L.push(head.join('  ·  '), '');
-  L.push(...marketSentence(facts.market), '');
+  const ms = marketSentence(facts.market);
+  if (ms.length) L.push(...ms, '');
   L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked   ⏭ ${c.skipped} skipped` + (c.info ? `   · ${c.info} note` : ''), '');
 
   const sorted = [...result.findings].sort(bySeverity);
@@ -58,12 +59,11 @@ export function renderScan(result, facts, opts = {}) {
   }
 
   if (c.skipped) {
-    const byMarket = {};
-    for (const r of result.skippedRules) (byMarket[r.market] ||= []).push(r.id);
+    const byRegion = {};
+    for (const r of result.skippedRules) (byRegion[r.region] ||= []).push(r.id);
     const label = { kr: 'Naver (Korea)', jp: 'Yahoo! JAPAN (Japan)' };
-    for (const [mk, ids] of Object.entries(byMarket)) {
-      L.push(`⏭ ${ids.length} ${label[mk] || mk} rules not evaluated (${ids.join(' · ')})`);
-      L.push(`   If that region applies, pass --market=${mk}`);
+    for (const [rg, ids] of Object.entries(byRegion)) {
+      L.push(`⏭ ${ids.length} optional ${label[rg] || rg} items hidden (${ids.join(' · ')}) — drop --market to see them`);
     }
     L.push('');
   }

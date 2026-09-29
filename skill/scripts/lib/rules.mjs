@@ -1,3 +1,18 @@
+// Every rule is evaluated for every site. Allowing a crawler is free regardless of
+// which countries you target, so gating checks on a "market" only created blind spots.
+// Region-specific work that needs a console account is marked `region` and surfaces in
+// todo as optional — it is never reported as a failure (invariant 7).
+export function partitionByMarket(rules, markets = null) {
+  const filter = Array.isArray(markets) ? new Set(markets) : null;
+  const active = [], skipped = [];
+  for (const r of rules) {
+    // The only thing a market filter does is hide optional regional advice on request.
+    if (filter && r.region && !filter.has(r.region)) skipped.push(r);
+    else active.push(r);
+  }
+  return { active, skipped };
+}
+
 // Catalog loading and linting. A rule without evidence/grade is never loaded (invariant 4).
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -39,17 +54,6 @@ export function loadCatalog(path = CATALOG_PATH) {
 
 export const daysSince = (d) => Math.floor((Date.now() - new Date(d + 'T00:00:00Z').getTime()) / 86400000);
 
-// Rules that do not match the detected markets are not evaluated, but they are never
-// hidden (invariant 7). `markets` is an array: a site can target several regions at once.
-export function partitionByMarket(rules, markets = []) {
-  const set = new Set(Array.isArray(markets) ? markets : [markets].filter(Boolean));
-  const active = [], skipped = [];
-  for (const r of rules) {
-    if (r.market && r.market !== 'all' && !set.has(r.market)) skipped.push(r);
-    else active.push(r);
-  }
-  return { active, skipped };
-}
 
 if (process.argv[1] && process.argv[1].endsWith('rules.mjs') && process.argv.includes('--lint')) {
   const { rules, rejected, stale } = loadCatalog();

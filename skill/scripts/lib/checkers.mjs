@@ -281,11 +281,6 @@ export const checkers = {
     return { ok: true, detail: 'no such usage' };
   },
 
-  // A rule that carries a fact rather than a verdict. Always passes; the detail is the point.
-  engineNote(f, a) {
-    return { ok: true, detail: a.note };
-  },
-
   manual(f, a) {
     return { ok: null, detail: 'there is no way to check this from outside', todo: a.todo || [] };
   },

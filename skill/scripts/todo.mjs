@@ -3,20 +3,26 @@
 import { parseArgs, out, log, EXIT } from './lib/args.mjs';
 import { run } from './lib/run.mjs';
 
-const ENGINE_ORDER = ['naver', 'google', 'bing', 'core', 'ai'];  // Naver takes longest to take effect -> list it first
-const ENGINE_LABEL = { naver: 'Naver', google: 'Google', bing: 'Bing', core: 'Common', ai: 'AI search' };
+const ENGINE_ORDER = ['google', 'bing', 'core', 'ai', 'naver', 'yahoo'];
+const ENGINE_LABEL = { naver: 'Naver', google: 'Google', bing: 'Bing', core: 'Common', ai: 'AI search', yahoo: 'Yahoo' };
+const REGION_LABEL = { kr: 'Korea — Naver', jp: 'Japan — Yahoo! JAPAN' };
+const REGION_NOTE = {
+  kr: 'do these in order or they will not take effect',
+  jp: "Yahoo! JAPAN web search runs on Google's index, so the Google items above already cover ranking. There is no separate console — submit through Search Console. Yahoo outside Japan runs on Bing.",
+};
 
 const args = parseArgs();
 
 try {
   const { facts, result } = await run(args);
 
-  // Human's share: unknown findings carrying todos, Naver rules skipped by market, and non-autofixable failures
+  // Human's share: unknown findings carrying todos, plus anything non-autofixable
   const items = [];
   for (const f of result.findings) {
-    if (f.todo.length) { for (const t of f.todo) items.push({ ...t, id: f.id, engine: f.engine }); continue; }
+    if (f.todo.length) { for (const t of f.todo) items.push({ ...t, id: f.id, engine: f.engine, region: f.region }); continue; }
     if (f.status === 'pass' || f.status === 'unknown') continue;
-    if (!f.fixable) items.push({ label: f.problem, note: f.action, id: f.id, engine: f.engine, minutes: null });
+    if (!f.fixable) items.push({ label: f.problem, note: f.action, id: f.id, engine: f.engine, region: f.region, minutes: null });
+    else if (f.optIn) items.push({ label: f.problem, note: f.action, id: f.id, engine: f.engine, region: f.region, minutes: null });
   }
 
   const auto = result.findings.filter((f) => f.fixable && f.status !== 'pass' && f.status !== 'unknown' && !f.optIn).length;
@@ -26,27 +32,40 @@ try {
     process.exit(EXIT.OK);
   }
 
-  const total = items.reduce((a, i) => a + (i.minutes || 0), 0);
-  const L = [`${items.length} things only a human can do${total ? ` · about ${total} min` : ''}`, ''];
+  const core = items.filter((i) => !i.region);
+  const regional = items.filter((i) => i.region);
+  const total = core.reduce((a, i) => a + (i.minutes || 0), 0);
+  const L = [`${items.length} things only a human can do${total ? ` · about ${total} min for the required ones` : ''}`, ''];
 
-  if (facts.market.market !== 'kr') {
-    L.push('Note: Naver tasks are excluded because this site was not judged to target Korea. Pass --market=kr if it does.', '');
-  }
-
-  for (const engine of ENGINE_ORDER) {
-    const group = items.filter((i) => i.engine === engine);
-    if (!group.length) continue;
-    L.push(`${ENGINE_LABEL[engine]}${engine === 'naver' ? '  — do these in order or they will not take effect' : ''}`);
+  const print = (group, heading, sub) => {
+    if (!group.length) return;
+    L.push(heading);
+    if (sub) L.push(`  ${sub}`);
     group.forEach((i, n) => {
       L.push(`  ${n + 1}. [ ] ${i.label}${i.minutes ? `   ${i.minutes} min` : ''}${i.url ? `   ${i.url}` : ''}`);
       if (i.note) L.push(`         → ${i.note}`);
     });
-    if (engine === 'naver') L.push('         ⏳ After submitting the sitemap, indexing takes about two weeks — not appearing during that window is normal');
     L.push('');
+  };
+
+  for (const engine of ENGINE_ORDER) {
+    const group = core.filter((i) => i.engine === engine);
+    print(group, ENGINE_LABEL[engine]);
   }
 
-  const passed = result.counts.pass;
-  L.push(`Verified or handled automatically: ${passed}`);
+  if (regional.length) {
+    const sug = Object.keys(facts.market.suggested || {});
+    L.push('Optional — only if you want traffic from these countries');
+    if (sug.length) L.push(`  (signals on this site suggest ${sug.map((k) => REGION_LABEL[k]).join(' and ')} may apply to you)`);
+    L.push('');
+    for (const rg of ['kr', 'jp']) {
+      const group = regional.filter((i) => i.region === rg);
+      if (group.length) print(group, `  ${REGION_LABEL[rg]}`, REGION_NOTE[rg]);
+      if (group.length && rg === 'kr') L.push('     ⏳ After submitting the sitemap, indexing takes about two weeks — not appearing during that window is normal', '');
+    }
+  }
+
+  L.push(`Verified or handled automatically: ${result.counts.pass}`);
   if (auto) L.push(`Still autofixable: ${auto} → apply`);
   out(L.join('\n'));
   process.exit(EXIT.OK);

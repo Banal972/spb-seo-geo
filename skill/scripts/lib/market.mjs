@@ -79,25 +79,16 @@ export function marketPhase2(phase1, pages = []) {
   return { ...phase1, suggested };
 }
 
-// Say it as sentences. When unanswered, the agent must ask — not guess.
+// Regions are not a gate. Everything is checked for everyone; this only states which
+// optional console work is likely to be worth the user's time.
 export function marketSentence(m) {
   const sug = Object.keys(m.suggested || {});
   if (m.answered) {
-    if (!m.markets.length) {
-      return ['Regional engines: none (Google and Bing always apply).',
-              `  Set by ${m.source}.` + (sug.length ? `  Signals suggest ${sug.map((k) => LABEL[k]).join(', ')} may apply — re-run with --market=${sug.join(',')} if so.` : '')];
-    }
-    return [`Regional engines: ${m.markets.map((k) => LABEL[k]).join(', ')}  (set by ${m.source})`];
+    if (!m.markets.length) return ['Regional console steps: hidden (--market=global).'];
+    return [`Regional console steps: ${m.markets.map((k) => LABEL[k]).join(', ')} only  (set by ${m.source})`];
   }
-  const lines = ['Regional engines: NOT SET — Naver and Yahoo! JAPAN rules were not evaluated.'];
-  if (sug.length) {
-    for (const k of sug) lines.push(`  Signals suggest ${LABEL[k]}: ${m.suggested[k].join(' · ')}`);
-  } else {
-    lines.push('  No regional signal found in the content.');
-  }
-  lines.push('  ASK THE USER which markets they want, then re-run with --market=kr | jp | kr,jp | global.');
-  lines.push('  The answer is saved to .spb-seo-geo.json and never asked again.');
-  return lines;
+  if (!sug.length) return [];
+  return [`Regional signals: ${sug.map((k) => `${LABEL[k]} — ${m.suggested[k].join(' · ')}`).join('  |  ')}`];
 }
 
-export const marketValue = (m) => (m.answered ? (m.markets.join(',') || 'global') : 'not-set');
+export const marketValue = (m) => (m.answered ? (m.markets.join(',') || 'global') : 'all');

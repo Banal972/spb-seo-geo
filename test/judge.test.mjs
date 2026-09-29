@@ -19,7 +19,7 @@ function fixture({ robots = 'User-agent: *\nAllow: /\n', html = '<html lang="ko"
 
 test('blocking a citation bot is a critical failure', () => {
   const f = fixture({ robots: 'User-agent: Claude-SearchBot\nDisallow: /\n' });
-  const r = judge(f, { markets: ['kr'] });
+  const r = judge(f, { markets: null });
   const geo = r.findings.find((x) => x.id === 'GEO-01');
   assert.equal(geo.status, 'fail');
   assert.ok(geo.detail.includes('Claude-SearchBot'));
@@ -27,33 +27,32 @@ test('blocking a citation bot is a critical failure', () => {
 
 test('nosnippet is a critical failure (it is the precondition for AI citation)', () => {
   const f = fixture({ html: '<html lang="ko"><head><meta name="robots" content="nosnippet"><title>T</title></head><body>본문</body></html>' });
-  const r = judge(f, { markets: ['kr'] });
+  const r = judge(f, { markets: null });
   assert.equal(r.findings.find((x) => x.id === 'GOOGLE-03').status, 'fail');
 });
 
 test('unknown is never promoted to pass', () => {
   const f = fixture();
-  const r = judge(f, { markets: ['kr'] });
+  const r = judge(f, { markets: null });
   const naver = r.findings.find((x) => x.id === 'NAVER-04');
   assert.equal(naver.status, 'unknown');
   assert.ok(naver.todo.length >= 3, 'console work is handed to todo');
 });
 
-test('with no regional answer, regional rules are counted as skipped and still surfaced', () => {
+test('a market filter surfaces what it hid instead of silently dropping it', () => {
   const f = fixture();
-  f.market = { markets: [], answered: false, suggested: {} };
-  const r = judge(f, { markets: [] });
-  assert.equal(r.counts.skipped, 6);
-  assert.equal(r.skippedRules.length, 6);
+  f.market = { markets: ['jp'], answered: true, source: '--market', suggested: {} };
+  const r = judge(f, { markets: ['jp'] });
+  assert.equal(r.counts.skipped, 3);
+  assert.equal(r.skippedRules.length, 3);
   const text = renderScan(r, f, {});
-  assert.match(text, /4 Naver \(Korea\) rules not evaluated/);
-  assert.match(text, /2 Yahoo! JAPAN \(Japan\) rules not evaluated/);
-  assert.match(text, /--market=kr/);
+  assert.match(text, /3 optional Naver \(Korea\) items hidden/);
+  assert.match(text, /drop --market/);
 });
 
 test('the report never enumerates passing rules', () => {
   const f = fixture();
-  const r = judge(f, { markets: ['kr'] });
+  const r = judge(f, { markets: null });
   const text = renderScan(r, f, {});
   assert.match(text, /✅ \d+ pass/);
   const passIds = r.findings.filter((x) => x.status === 'pass').map((x) => x.id);
@@ -63,21 +62,21 @@ test('the report never enumerates passing rules', () => {
 
 test('no score is ever produced', () => {
   const f = fixture();
-  const text = renderScan(judge(f, { markets: ['kr'] }), f, {});
+  const text = renderScan(judge(f, { markets: null }), f, {});
   assert.doesNotMatch(text, /\/\s?100|score/i);
 });
 
 test('--json emits a stable schema', () => {
   const f = fixture();
-  const j = JSON.parse(renderJson(judge(f, { markets: ['kr'] }), f));
+  const j = JSON.parse(renderJson(judge(f, { markets: null }), f));
   assert.equal(j.tool, 'spb-seo-geo');
   assert.ok(j.counts && j.findings.length);
-  assert.deepEqual(j.market.markets, ['kr']);
+  assert.deepEqual(j.market.markets, ['kr'], 'echoes the fixture market as-is');
   assert.ok(j.findings.every((x) => x.evidence.startsWith('http')));
 });
 
 test('under ai-policy=cite-only, allowed training bots are flagged as policy mismatch', () => {
   const f = fixture();
-  const r = judge(f, { markets: ['kr'], aiPolicy: 'cite-only' });
+  const r = judge(f, { markets: null, aiPolicy: 'cite-only' });
   assert.equal(r.findings.find((x) => x.id === 'GEO-02').status, 'info');
 });

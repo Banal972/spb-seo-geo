@@ -78,6 +78,31 @@ export function llmsTxt({ title, origin, pages = [] }) {
 
 export const verifyMeta = (name, token) => `<meta name="${name}" content="${esc(token)}" />`;
 
+// Framework-aware snippets. A raw <meta> tag is useless to someone whose framework
+// owns <head> through a metadata API — give them the form they can actually paste.
+export function verifySnippet(framework, tokens) {
+  const entries = Object.entries(tokens).filter(([, v]) => v);
+  if (!entries.length) return null;
+  const NAME = { google: 'google-site-verification', naver: 'naver-site-verification', bing: 'msvalidate.01' };
+
+  if (framework === 'Next.js') {
+    const other = entries.filter(([k]) => k !== 'google').map(([k, v]) => `      '${NAME[k]}': '${v}',`);
+    const lines = ['export const metadata = {', '  verification: {'];
+    const g = entries.find(([k]) => k === 'google');
+    if (g) lines.push(`    google: '${g[1]}',`);
+    if (other.length) lines.push('    other: {', ...other, '    },');
+    lines.push('  },', '};');
+    return { how: 'in app/layout.tsx (Next.js Metadata API)', body: lines.join('\n') };
+  }
+  if (framework === 'Nuxt') {
+    return {
+      how: 'in nuxt.config.ts → app.head.meta',
+      body: 'meta: [\n' + entries.map(([k, v]) => `  { name: '${NAME[k]}', content: '${v}' },`).join('\n') + '\n]',
+    };
+  }
+  return { how: 'inside <head>', body: entries.map(([k, v]) => verifyMeta(NAME[k], v)).join('\n') };
+}
+
 export function ogSnippet({ title, description, image }) {
   return [
     `<meta property="og:title" content="${esc(title || '')}" />`,
