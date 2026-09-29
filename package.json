@@ -48,6 +48,7 @@
   },
   "scripts": {
     "test": "node --test \"test/*.test.mjs\"",
-    "lint:rules": "node skill/scripts/lib/rules.mjs --lint"
+    "lint:rules": "node skill/scripts/lib/rules.mjs --lint",
+    "prepublishOnly": "npm test && npm run lint:rules"
   }
 }
