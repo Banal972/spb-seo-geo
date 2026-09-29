@@ -2,6 +2,15 @@
 // engines you target, so gating checks on an engine selection only created blind spots.
 // Work that needs an optional engine's console account is marked `region` (the engine key)
 // and surfaces in todo as optional — never as a failure (invariant 7).
+// Some people only care about classic search, some only about being cited by AI.
+// Filtering is honest as long as what was left out is stated (invariant 7).
+export function partitionByScope(rules, only = null) {
+  if (!only || only === 'all') return { active: rules, skipped: [] };
+  const active = [], skipped = [];
+  for (const r of rules) (r.scope.includes(only) ? active : skipped).push(r);
+  return { active, skipped };
+}
+
 export function partitionByEngines(rules, engines = null) {
   const filter = Array.isArray(engines) ? new Set(engines) : null;
   const active = [], skipped = [];
@@ -22,6 +31,7 @@ import { checkers } from './checkers.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const CATALOG_PATH = join(HERE, '..', '..', 'rules', 'catalog.json');
 const GRADES = new Set(['primary', 'secondary', 'low']);
+const SCOPES = new Set(['seo', 'geo']);
 const SEVERITIES = new Set(['critical', 'warn', 'info']);
 export const STALE_DAYS = 180;
 
@@ -36,6 +46,7 @@ export function lintRule(r) {
   if (!r.problem || !r.action) errs.push('missing problem/action');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(r.checked || '')) errs.push('missing checked date');
   if (r.autofix && !r.fix) errs.push('autofix=true but no fix generator specified');
+  if (!Array.isArray(r.scope) || !r.scope.length || r.scope.some((x) => !SCOPES.has(x))) errs.push(`scope must be a non-empty subset of seo/geo, got ${JSON.stringify(r.scope)}`);
   return errs;
 }
 

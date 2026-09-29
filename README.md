@@ -4,22 +4,27 @@ English · **[한국어](./README.ko.md)**
 
 An **agent skill that audits and configures a site's search and AI visibility** — Google Search Console, Bing Webmaster Tools, Naver Search Advisor, Yahoo! JAPAN, plus AI answer citation (GEO/AEO) — in one pass.
 
-It asks what it cannot infer — your URL, whether to add Naver and Yahoo, your console verification tokens — **once, up front**, then configures everything from those answers and hands you only the steps that genuinely require a human.
+It infers what it can, asks only for what unlocks something, configures everything it can reach, and hands you only the steps that genuinely require a human.
 
 ```
 npx spb-seo-geo     # install: pick only the harnesses you use, 2 questions
-/spbseo             # from then on, just this
+/spbseo             # audit everything
+/spbseo seo         # classic search only
+/spbseo geo         # AI citation only
 ```
 
-On the first run the agent asks for the site URL, whether to add Naver and Yahoo, your
-verification tokens and your AI-training policy. Everything is saved to
-`.spb-seo-geo.json`, so every later run needs nothing at all.
+**No configuration and no questions to start.** It finds your site URL in the project —
+framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing
+sitemap or robots.txt — and picks up an access log if one is lying in the repo. It only
+asks for things that unlock something: verification tokens (so it can place the
+ownership tags for you) and an access log (so GEO is measured, not assumed).
 
 ## What makes it different
 
 | | |
 | --- | --- |
 | **Code makes the verdict, not the model** | The agent never reads your HTML, robots.txt or sitemap. One audit costs about as many tokens as reading a single report, and the same site always yields the **same result** — even if you swap the model underneath. |
+| **Nothing to configure first** | `scan` with no flags works in a fresh checkout: the URL comes from the project, not from you. Anything inferable is never a question. |
 | **Finishes the job instead of listing it** | Ask for the verification tokens up front and the tool can place them, instead of printing "add this yourself". For frameworks that own `<head>`, it emits the form you can actually paste — a Next.js `metadata.verification` object, not a raw `<meta>` tag. |
 | **Optional work is optional, never a failure** | Every rule runs for every site, because allowing a crawler costs nothing. Only work that needs a console account is optional, and it lands in `todo` under "Optional engines" — a site that ignores Naver never sees a Naver *failure*. Signals (`100% Hangul`, `.jp domain`) are shown as a suggestion, not a gate. |
 | **Yahoo, described honestly** | Yahoo has no index of its own: **Yahoo! JAPAN runs on Google's**, and Yahoo elsewhere runs on **Bing**. So "optimise for Yahoo" is not a real task, and inventing a Yahoo rule group would mean rules with no evidence. Japan adds exactly one real check (Yahoo! JAPAN's own `Y!J-*` crawlers) plus a note pointing at the Google findings. |
@@ -64,11 +69,11 @@ You normally reach these through `/spbseo` rather than typing them. `setup` save
 - `apply` **previews by default.** Nothing changes without `--write`; existing files are backed up to `.bak`, and only the region inside the `# >>> spb-seo-geo` markers is touched.
 - `submit` notifies **Bing, Naver, Yandex and Seznam** over IndexNow. Google does not participate, so it never claims otherwise.
 
-## What gets checked (44 rules)
+## What gets checked (45 rules)
 
 | Group | Count | Covers |
 | --- | --- | --- |
-| CORE | 16 | robots.txt · sitemap · canonical · title/description · server-rendered body text · `lang` accuracy · Open Graph · IndexNow key |
+| CORE | 17 | robots.txt · sitemap · canonical · title/description · server-rendered body text · `lang` accuracy · Open Graph · IndexNow key |
 | GOOGLE | 7 | ownership · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API misuse |
 | BING | 3 | ownership · bingbot · registration (with the GSC-import shortcut) |
 | GEO | 13 | **citation bots allowed** · training policy · user-triggered bots · **actual crawler fetches from your access log** · policy violations · text form · internal links · headings · dates · entity markup · citation signals |
@@ -77,7 +82,9 @@ You normally reach these through `/spbseo` rather than typing them. `setup` save
 You are asked only whether to add **Naver** and **Yahoo**, by name. Google and Bing are never optional.
 | YAHOO | 1 | Yahoo! JAPAN's own `Y!J-*` crawlers (checked for everyone — allowing them is free) |
 
-41 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Naver, reported as notes and routed to `todo`.
+Every rule carries a `scope`, so `--only seo` (30 rules) and `--only geo` (25) are real splits rather than guesses — infrastructure that gates both (robots, sitemap, indexability, server-rendered text) appears in both.
+
+42 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Naver, reported as notes and routed to `todo`.
 
 ### GEO is measured, not assumed
 

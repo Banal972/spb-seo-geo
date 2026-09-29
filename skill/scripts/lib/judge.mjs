@@ -1,6 +1,6 @@
 // rules x facts -> findings. No path here lets a model influence the verdict (invariant 9).
 import { checkers } from './checkers.mjs';
-import { loadCatalog, partitionByEngines, daysSince, STALE_DAYS } from './rules.mjs';
+import { loadCatalog, partitionByEngines, partitionByScope, daysSince, STALE_DAYS } from './rules.mjs';
 
 const statusFor = (ok, severity) => {
   if (ok === null) return 'unknown';
@@ -8,9 +8,11 @@ const statusFor = (ok, severity) => {
   return severity === 'critical' ? 'fail' : severity === 'warn' ? 'warn' : 'info';
 };
 
-export function judge(facts, { engines = null, aiPolicy = 'open' } = {}) {
+export function judge(facts, { engines = null, aiPolicy = 'open', only = null } = {}) {
   const { rules, rejected, stale } = loadCatalog();
-  const { active, skipped } = partitionByEngines(rules, engines);
+  const scoped = partitionByScope(rules, only);
+  const { active, skipped } = partitionByEngines(scoped.active, engines);
+  const outOfScope = scoped.skipped;
   facts.aiPolicy = aiPolicy;
 
   const findings = [];
@@ -32,12 +34,14 @@ export function judge(facts, { engines = null, aiPolicy = 'open' } = {}) {
     });
   }
 
-  const counts = { pass: 0, warn: 0, info: 0, fail: 0, unknown: 0, skipped: skipped.length };
+  const counts = { pass: 0, warn: 0, info: 0, fail: 0, unknown: 0, skipped: skipped.length, outOfScope: outOfScope.length };
   for (const f of findings) counts[f.status]++;
 
   return {
     findings, counts,
     skippedRules: skipped.map((r) => ({ id: r.id, engine: r.engine, region: r.region, problem: r.problem })),
+    outOfScope: outOfScope.map((r) => r.id),
+    only,
     meta: { total: rules.length, rejected, stale: stale.map((r) => r.id) },
   };
 }

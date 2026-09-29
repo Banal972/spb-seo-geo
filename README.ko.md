@@ -9,8 +9,12 @@
 
 ```
 npx spb-seo-geo     # 설치 — 쓰는 하네스만 골라서, 질문 2개
-/spbseo             # 이후 매번 이것만
+/spbseo             # 전체 점검
+/spbseo seo         # 검색만
+/spbseo geo         # AI 인용만
 ```
+
+**시작할 때 설정도 질문도 없습니다.** 사이트 URL 을 프로젝트에서 찾습니다 — 프레임워크 설정, `package.json` `homepage`, `public/CNAME`, `.env*`, 기존 사이트맵·robots.txt. 레포에 액세스 로그가 있으면 그것도 집어옵니다. **뭔가를 가능하게 하는 것만** 물어봅니다: 소유확인 토큰(태그를 직접 넣어주기 위해), 액세스 로그(GEO 를 추측이 아니라 측정하기 위해).
 
 ## 무엇이 다른가
 
@@ -59,7 +63,7 @@ node <스킬>/scripts/submit.mjs --url https://example.kr --since HEAD~1
 - `apply` 는 **기본이 미리보기**입니다. `--write` 없이는 파일이 바뀌지 않고, 기존 파일은 `.bak` 으로 백업하며 `# >>> spb-seo-geo` 경계 주석 안쪽만 수정합니다.
 - `submit` 은 IndexNow 로 **Bing·네이버·Yandex·Seznam** 에 알립니다. 구글은 미참여이므로 보낸 척 하지 않습니다.
 
-## 검사 항목 (44개)
+## 검사 항목 (45개)
 
 41개는 어느 사이트에나 적용되는 판정이고, 나머지 3개는 네이버 콘솔 작업으로 참고 표시 후 `todo` 로 갑니다.
 
@@ -79,7 +83,7 @@ AI crawler activity (last 30d, ./access.log)
 
 | 그룹 | 수 | 내용 |
 | --- | --- | --- |
-| CORE | 16 | robots.txt · 사이트맵 · canonical · title/description · 초기 HTML 본문 · `lang` 일치 · 오픈그래프 · IndexNow 키 |
+| CORE | 17 | robots.txt · 사이트맵 · canonical · title/description · 초기 HTML 본문 · `lang` 일치 · 오픈그래프 · IndexNow 키 |
 | GOOGLE | 7 | 소유확인 · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API 오용 |
 | NAVER | 4 | **Yeti 차단**(모두에게 검사) · 소유확인 · RSS · 콘솔 등록 — 뒤 3개는 선택 안내이고 실패로 뜨지 않습니다 |
 | YAHOO | 1 | Yahoo! JAPAN 자체 크롤러 `Y!J-*` (모두에게 검사 — 허용은 공짜) |

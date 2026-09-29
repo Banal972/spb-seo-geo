@@ -15,39 +15,48 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 - Do not enumerate passing rules. Say `✅ N pass` in one line.
 - Never pass `--write` without the user's approval.
 
-## Intake — ask before the first run
-
-If `.spb-seo-geo.json` does not exist yet, ask for these **first**, in one message. They cannot be inferred, and with them in hand the setup finishes in one pass instead of handing half the work back.
-
-1. **Site URL** — required.
-2. **Whether to add Naver and/or Yahoo** — ask by engine name, not by country. Google and Bing always apply. `--engines naver,yahoo` or `--engines none`.
-3. **Verification tokens they already have** — the string from each console's "HTML tag" option. Skipping a console they have not signed up for is fine.
-4. **AI training policy** — `open` (default, max visibility), `cite-only` (block training, stay citable), `closed` (block both — warn that this removes the site from AI answers).
-5. **An access log if they can get one** (`--access-log <file>`, `.gz` fine) — the only way to know whether AI crawlers actually fetch the site.
-6. Optional: `--with-rss` (for Naver), `--with-llms-txt` (which Google says is unnecessary).
-
-Then run setup. Without `--write` it changes nothing and shows a preview:
+## Just run it — no questions needed
 
 ```
-node <DIR>/scripts/setup.mjs --url <SITE> [--engines naver,yahoo|none] [--ai-policy open|cite-only|closed] \
-     [--google-token X] [--bing-token X] [--naver-token X] [--with-rss] [--with-llms-txt] [--write]
+node <DIR>/scripts/scan.mjs
 ```
 
-Everything is saved, so later runs need no flags:
+No flags. It finds the site URL from the project — framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing `sitemap.xml`/`robots.txt` — plus an access log if one sits in the repo. The report says where the URL came from. **Ask for the URL only if it was not found.**
+
+Narrow it when the user cares about one side only: `--only seo` (30 rules) · `--only geo` (25) · default both (45). Whatever `--only` leaves out is stated, never silently dropped.
+
+## Ask only for what unlocks something
+
+Each of these buys a concrete capability. Ask when you reach it, not up front — and never ask for something the project already told us.
+
+| Ask for | Unlocks |
+| --- | --- |
+| **Verification tokens** (the "HTML tag" string from each console) | `apply` places the ownership tags instead of telling them to |
+| **An access log** (`--access-log`, `.gz` fine) | GEO goes from "allowed" to **measured** — which AI crawlers actually fetched |
+| `--ai-policy open\|cite-only\|closed` | only if they care about AI training; `open` is the default |
+| `--engines naver,yahoo\|none` | only to hide optional console advice; nothing is gated on it |
+
+Save answers once so later runs need no flags:
 
 ```
-node <DIR>/scripts/scan.mjs   [--verbose] [--json]   audit only
-node <DIR>/scripts/apply.mjs  [--write]              configure files
-node <DIR>/scripts/todo.mjs                          what only a human can do
-node <DIR>/scripts/submit.mjs [--since HEAD~1]       tell IndexNow about new pages
+node <DIR>/scripts/setup.mjs [--url X] [--google-token X] [--bing-token X] [--naver-token X] \
+     [--access-log path] [--ai-policy …] [--engines …] [--with-rss] [--with-llms-txt] [--write]
+```
+
+`setup` saves, then runs scan + apply preview + todo in one pass.
+
+```
+apply.mjs  [--write]          configure files
+todo.mjs                      what only a human can do
+submit.mjs [--since HEAD~1]   tell IndexNow about new pages
 ```
 
 Needs Node 20+; if missing, say so in one line and stop.
 
 ## Order of work
 
-1. **Intake → `setup`** (no `--write`): show the failures and the file preview.
-2. On approval, **`setup --write`** — or `apply --write` later.
+1. **`scan`** with no flags. Show the failures; say where the URL came from.
+2. **`apply`** to preview, then `apply --write` on approval.
 3. Relay **`todo`**: required console steps first, then optional engines. Keep the order and the ~2-week Naver delay as given.
 4. After they deploy, **`scan`** again against the live site.
 5. On new pages, **`submit`**. Google does not participate in IndexNow — never claim otherwise.

@@ -16,7 +16,9 @@ export function renderScan(result, facts, opts = {}) {
     facts.framework || 'framework unknown',
     `${result.findings.length + c.skipped} rules`,
   ];
+  if (result.only) head.splice(1, 0, `${result.only.toUpperCase()} only`);
   L.push(head.join('  ·  '), '');
+  if (facts.urlFrom && facts.urlFrom !== '--url') L.push(`Target ${facts.urlFrom}. Pass --url to override.`, '');
   const es = enginesSentence(facts.engines);
   if (es.length) L.push(...es, '');
   L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked   ⏭ ${c.skipped} skipped` + (c.info ? `   · ${c.info} note` : ''), '');
@@ -70,6 +72,10 @@ export function renderScan(result, facts, opts = {}) {
       L.push(`⏭ ${ids.length} optional ${ENGINE_LABEL[eng] || eng} items hidden (${ids.join(' · ')}) — add it with --engines to see them`);
     }
     L.push('');
+  }
+
+  if (c.outOfScope) {
+    L.push(`⏭ ${c.outOfScope} rules outside --only=${result.only} were not evaluated — drop --only for the full audit`, '');
   }
 
   if (result.meta.stale.length) {
