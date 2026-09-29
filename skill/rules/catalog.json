@@ -236,14 +236,14 @@
     {
       "id": "CORE-14",
       "engine": "core",
-      "severity": "warn",
+      "severity": "info",
       "autofix": false,
       "check": "langMatchesContent",
       "args": {},
-      "problem": "<html lang> does not match the actual content language",
-      "action": "Correct the lang attribute. It affects SEO, accessibility and market detection alike",
-      "evidence": "https://developers.google.com/search/docs/specialty/international/localized-versions",
-      "grade": "primary",
+      "problem": "<html lang> disagrees with the language actually on the page",
+      "action": "Fix the lang attribute. Google determines language from the content itself, so this is not a ranking lever — it matters for screen readers announcing the right voice, and it is one of the signals used to suggest regional engines here",
+      "evidence": "https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html",
+      "grade": "secondary",
       "checked": "2026-09-29",
       "scope": [
         "seo"

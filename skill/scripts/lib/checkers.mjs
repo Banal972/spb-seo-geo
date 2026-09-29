@@ -181,19 +181,30 @@ export const checkers = {
 
   langMatchesContent(f) {
     const g = needRemote(f); if (g) return g;
-    if (!f.home.parsed) return UNKNOWN('could not read the HTML');
-    const { lang, text } = f.home.parsed;
-    if (!lang) return { ok: false, detail: 'no lang attribute on <html>' };
-    if (text.length < 200) return UNKNOWN('body text too short to judge language');
-    const r = scriptRatios(text);
-    // Only scripts we can identify reliably are checked: Hangul for Korean, kana for Japanese.
+    const list = pages(f);
+    if (!list.length) return UNKNOWN('could not read the HTML');
+    if (!f.home.parsed?.lang) return { ok: false, detail: 'no lang attribute on <html>' };
+
+    // Compare each page against its own lang. A bilingual site legitimately serves ko and
+    // en side by side, so mixing one page's attribute with another page's text is wrong.
     const pct = (x) => `${Math.round(x * 100)}%`;
-    if (r.hangul >= 0.3 && !/^ko/.test(lang)) return { ok: false, detail: `${pct(r.hangul)} Hangul body but lang=${lang}` };
-    if (r.kana >= 0.1 && !/^ja/.test(lang)) return { ok: false, detail: `${pct(r.kana)} kana body but lang=${lang}` };
-    if (/^ko/.test(lang) && r.hangul < 0.05) return { ok: false, detail: `lang=${lang} but only ${pct(r.hangul)} Hangul` };
-    if (/^ja/.test(lang) && r.kana < 0.02) return { ok: false, detail: `lang=${lang} but only ${pct(r.kana)} kana` };
-    const seen = r.hangul >= 0.05 ? `${pct(r.hangul)} Hangul` : r.kana >= 0.02 ? `${pct(r.kana)} kana` : 'latin/other script';
-    return { ok: true, detail: `lang=${lang} · ${seen}` };
+    const mismatches = [];
+    let judged = 0;
+    for (const p of list) {
+      const lang = p.parsed.lang;
+      // A JS-rendered shell has no content to compare against. CORE-12 owns that defect;
+      // reporting it here too would blame the wrong thing.
+      if (!lang || p.parsed.text.length < 500) continue;
+      judged++;
+      const r = scriptRatios(p.parsed.text);
+      if (r.hangul >= 0.3 && !/^ko/.test(lang)) mismatches.push(`${p.url}: ${pct(r.hangul)} Hangul but lang=${lang}`);
+      else if (r.kana >= 0.1 && !/^ja/.test(lang)) mismatches.push(`${p.url}: ${pct(r.kana)} kana but lang=${lang}`);
+      else if (/^ko/.test(lang) && r.hangul < 0.05) mismatches.push(`${p.url}: lang=${lang} but ${pct(r.hangul)} Hangul`);
+      else if (/^ja/.test(lang) && r.kana < 0.02) mismatches.push(`${p.url}: lang=${lang} but ${pct(r.kana)} kana`);
+    }
+    if (!judged) return UNKNOWN('no page had enough text in its initial HTML to judge the language (see CORE-12)');
+    if (mismatches.length) return { ok: false, detail: mismatches.slice(0, 2).join(' · ') };
+    return { ok: true, detail: `${judged} pages match their own lang attribute` };
   },
 
   metaPresent(f, a) {
