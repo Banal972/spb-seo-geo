@@ -219,10 +219,10 @@ export const checkers = {
       if (local) return { ok: false, detail: `key file ${local} exists locally but is not live yet — deploy it` };
       return { ok: false, detail: 'no key configured (.spb-seo-geo.json)' };
     }
-    const { key, res } = f.indexNowKey;
-    if (!res.ok) return { ok: false, detail: `/${key}.txt returned HTTP ${res.status}` };
+    const { key, res, fromRepo } = f.indexNowKey;
+    if (!res.ok) return { ok: false, detail: `/${key}.txt returned HTTP ${res.status}${fromRepo ? ' — the key file is in the repo but not live yet, so deploy it' : ''}` };
     if (res.body.trim() !== key) return { ok: false, detail: `/${key}.txt content does not match the key` };
-    return { ok: true, detail: `/${key}.txt verified` };
+    return { ok: true, detail: `/${key}.txt verified${fromRepo ? ' (key taken from the file in your repo)' : ''}` };
   },
 
   noindexAbsent(f) {
@@ -415,18 +415,21 @@ export const checkers = {
 
   orphanPages(f) {
     const g = needRemote(f); if (g) return g;
-    if (!f.sitemapEntries?.length || !f.links.length) return UNKNOWN('no sitemap or internal links to compare');
-    const linked = new Set(f.links.map((l) => l.url.replace(/\/$/, '')));
+    if (!f.sitemapEntries?.length) return UNKNOWN('no sitemap to compare against');
+    const linked = new Set(f.linkedUrls || []);
+    if (!linked.size) return UNKNOWN('no internal links found on the pages we read');
     linked.add(f.home.url.replace(/\/$/, ''));
+    const crawled = 1 + f.samples.filter((s) => s.parsed).length;
     const orphans = f.sitemapEntries
       .map((e) => e.loc.replace(/\/$/, ''))
       .filter((u) => !linked.has(u));
-    // We only walked links from the home page, so deep pages may not truly be orphans -> flag only at an extreme ratio
-    const ratio = orphans.length / f.sitemapEntries.length;
-    if (ratio > 0.9 && f.sitemapEntries.length > 3) {
-      return { ok: false, detail: `${orphans.length} of ${f.sitemapEntries.length} sitemap URLs are unreachable from the home page` };
+    // We only read a handful of pages, so "some are unlinked" says nothing. Only the
+    // absolute case is a finding — anything softer flapped between runs on a dynamic home
+    // page, and a flaky verdict is worse than no verdict.
+    if (orphans.length === f.sitemapEntries.length && f.sitemapEntries.length > 3) {
+      return { ok: false, detail: `none of ${f.sitemapEntries.length} sitemap URLs are linked from the ${crawled} pages we read` };
     }
-    return { ok: true, detail: `${f.sitemapEntries.length - orphans.length}/${f.sitemapEntries.length} reachable from home` };
+    return { ok: true, detail: `${f.sitemapEntries.length - orphans.length}/${f.sitemapEntries.length} sitemap URLs linked from the ${crawled} pages we read` };
   },
 
   citationSignals(f) {

@@ -25,16 +25,22 @@ export async function run(args) {
   }
   const accessLog = args['access-log'] || config.accessLog || detectAccessLog(root);
 
+  // Local files first: the IndexNow key is its own filename, so finding the file means
+  // finding the key. Without this the check needed the key hand-written into config.
+  const local = collectLocalFiles(root, fw);
+
   const facts = await collect({
     url, config,
     options: {
       engines: args.engines ?? args.market,
       accessLog,
+      local,
+      root,
       logWindow: args['log-window'] || config.logWindow,
     },
   });
   facts.dir = root;
-  facts.local = collectLocalFiles(root, fw);
+  facts.local = local;
   facts.fw = fw;
   facts.framework = fw.name;
 

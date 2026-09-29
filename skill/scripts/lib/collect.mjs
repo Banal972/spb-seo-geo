@@ -3,7 +3,7 @@ import { get, pool } from './http.mjs';
 import { parseHtml } from './html.mjs';
 import { parseSitemap, parseFeed } from './xml.mjs';
 import { parseRobots } from './robots.mjs';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { enginesPhase1, enginesPhase2 } from './engines.mjs';
 import { analyze } from './accesslog.mjs';
@@ -94,12 +94,17 @@ export async function collect({ url, config = {}, options = {} }) {
   facts.llms = llms;
   facts.files['/BingSiteAuth.xml'] = bingFile;
 
-  // IndexNow key: verifiable only when configured, since the filename *is* the key
-  if (config.indexNow?.key) {
-    const keyRes = await get(abs(origin, `/${config.indexNow.key}.txt`));
-    facts.indexNowKey = { key: config.indexNow.key, res: keyRes };
-  } else {
-    facts.indexNowKey = null;
+  // The IndexNow filename *is* the key, so a key file in the repo tells us what to probe.
+  // Configured value wins; otherwise try what is committed.
+  const keyCandidates = [
+    config.indexNow?.key,
+    ...(options.local?.indexNowKeys || []).map((p) => p.split('/').pop().replace(/\.txt$/i, '')),
+  ].filter(Boolean);
+  facts.indexNowKey = null;
+  for (const key of [...new Set(keyCandidates)]) {
+    const keyRes = await get(abs(origin, `/${key}.txt`));
+    facts.indexNowKey = { key, res: keyRes, fromRepo: key !== config.indexNow?.key };
+    if (keyRes.ok) break;
   }
 
   // RSS: probe only when market=kr, so a global site never fires these requests
@@ -113,6 +118,19 @@ export async function collect({ url, config = {}, options = {} }) {
     facts.feeds = res.filter((r) => r.ok).map((r) => ({ url: r.requested, res: r, parsed: parseFeed(r.body), declared: false }));
   }
 
+  // Every internal link we saw anywhere, for reachability. A dynamic home page changes its
+  // links between requests, so one page alone made the orphan check flap.
+  facts.linkedUrls = new Set();
+  for (const p of [facts.home, ...facts.samples]) {
+    for (const a of p?.parsed?.anchors || []) {
+      if (!a.href) continue;
+      try {
+        const u = new URL(a.href, p.url).toString().replace(/#.*$/, '').replace(/\/$/, '');
+        if (u.startsWith(origin)) facts.linkedUrls.add(u);
+      } catch {}
+    }
+  }
+
   // Health of internal links leaving the home page
   const internal = [...new Set((facts.home.parsed?.anchors || [])
     .map((a) => a.href)
@@ -122,6 +140,19 @@ export async function collect({ url, config = {}, options = {} }) {
   if (internal.length) {
     const res = await pool(internal, (u) => get(u, { method: 'HEAD', timeout: 5000 }));
     facts.links = res.map((r) => ({ url: r.requested, status: r.status, ok: r.ok }));
+  }
+
+  // "I already fixed that" usually means the repo is ahead of the deployment. Saying so
+  // costs one line and saves the whole confusion.
+  facts.deployLag = [];
+  for (const [rel, path] of [[options.local?.robots, '/robots.txt'], [options.local?.sitemap, '/sitemap.xml']]) {
+    if (!rel) continue;
+    try {
+      const localBody = readFileSync(join(options.root || '.', rel), 'utf8').trim();
+      const liveRes = path === '/robots.txt' ? facts.robots?.res : facts.sitemaps.find((x) => x.url.endsWith(path))?.res;
+      if (!liveRes?.ok) continue;
+      if (liveRes.body.trim() !== localBody) facts.deployLag.push(rel);
+    } catch {}
   }
 
   return facts;

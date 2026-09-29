@@ -23,6 +23,11 @@ export function renderScan(result, facts, opts = {}) {
   if (es.length) L.push(...es, '');
   L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked` + (c.info ? `   · ${c.info} note` : '') + (c.skipped ? `   ⏭ ${c.skipped} skipped` : '') + (c.notApplicable ? `   n/a ${c.notApplicable}` : ''), '');
 
+  if (facts.deployLag?.length) {
+    L.push(`Note: ${facts.deployLag.join(', ')} differs from what is live — the repo is ahead of the deployment.`,
+           '  Fixes you already committed will not show up here until you deploy.', '');
+  }
+
   // Crawler activity is the point even when it passes, so it gets its own block.
   // A verdict alone ("fine") throws away the only hard evidence we have for GEO.
   if (facts.accessLog?.ok) L.push(...crawlerBlock(facts.accessLog), '');
