@@ -128,11 +128,14 @@ The two that fire most often:
 ## Development
 
 ```bash
-npm test              # 40 tests
+npm test              # 132 tests
 npm run lint:rules    # rejects any rule lacking evidence or a grade
 ```
 
-Design notes and the decision log (D1–D15) live in `PLAN.md` and in the companion research vault.
+The binding constraints are in the code, not in a document: `npm run lint:rules` refuses a
+rule without evidence and a grade, and `test/` fails if `SKILL.md` outgrows its token
+budget, if a repo with several sites is audited without one being named, or if an
+`--only` run stops saying what it did not check.
 
 ## Localisation
 

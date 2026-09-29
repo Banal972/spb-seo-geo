@@ -148,11 +148,11 @@ AI crawler activity (last 30d, ./access.log)
 ## 개발
 
 ```bash
-npm test              # 127개
+npm test              # 132개
 npm run lint:rules    # 근거·등급 없는 규칙을 거부
 ```
 
-설계 문서와 의사결정 기록(D1~D29)은 `PLAN.md` 와 `../ai-reasearch/10-Projects/08-spb-seo-geo/` 에 있습니다.
+지켜야 할 제약은 문서가 아니라 코드에 있습니다. `npm run lint:rules` 는 근거·등급 없는 규칙을 거부하고, `test/` 는 `SKILL.md` 가 토큰 예산을 넘거나 · 사이트가 여럿인 저장소를 하나 고르지 않은 채 검사하거나 · `--only` 실행이 무엇을 안 봤는지 말하지 않으면 실패합니다.
 
 ## 라이선스
 
