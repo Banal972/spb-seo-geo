@@ -38,12 +38,11 @@ const EXPLAIN = {
     'Search ranking is identical in all three — Google states Google-Extended is training only.',
   ],
   tokens: [
-    'With a token we place the ownership tag for you (or emit the exact snippet for your framework). Without it, you get a "go fetch it" item instead.',
-    'Skip any console you have not signed up for. Already verified by DNS or by an uploaded file? Say so — a committed verification file is detected automatically.',
+    'With one we place the tag (or emit the exact snippet for your framework); without it you get a "go fetch it" item instead.',
+    'Already verified by DNS or an uploaded file? Say so — a committed verification file is detected automatically.',
   ],
   log: [
-    'This is the only way to know whether AI crawlers actually fetch the site. Being allowed in robots.txt proves nothing.',
-    'It reports which citation bots came and when, and whether a real person opened your link inside ChatGPT or Claude — the strongest evidence AI answers send traffic.',
+    'It reports which citation bots came and when, and whether a real person opened your link inside ChatGPT or Claude — the strongest evidence that AI answers send traffic. Being allowed in robots.txt proves nothing on its own.',
   ],
   extras: [
     'RSS      — Naver still treats it as a first-class input, so worth it if you publish regularly. Our feed is static, so it goes stale unless your build regenerates it. Pointless for a landing page.',
@@ -78,15 +77,13 @@ if (cfg.url) {
   ask(1, 'site URL', 'unknown', 'What is the deployed address of this site?', '--url <SITE>');
 }
 
-// 2, 3 — one engine per question. Never inferred from language.
-for (const e of OPTIONAL_ENGINES) {
-  const chosen = engines?.includes(e);
-  const decided = engines !== null;
-  ask(steps.length + 1, LABEL[e],
-    decided ? (chosen ? 'yes (saved)' : 'no (saved)') : 'not asked',
-    decided ? null : `Do you want to cover ${LABEL[e]}?`,
-    `--engines ${e}`, EXPLAIN.engines[e]);
-}
+// Engines are NOT asked. Every rule runs for every site either way; the only thing a
+// choice changes is whether a few advisory lines show up in todo. Every other question
+// here changes what gets written or evaluated — this one did not earn its place. Both
+// engines stay named in the report and in todo, so saying "we do not do Naver" any time
+// still works via --engines.
+ask(2, 'optional engines', engines ? (engines.join(', ') || 'none (saved)') : 'not chosen — both listed as available',
+  null, null);
 
 // 4 — a value judgement, so it is always the user's call.
 ask(4, 'AI training policy', cfg.aiPolicy ? `${cfg.aiPolicy} (saved)` : 'not asked',
@@ -128,7 +125,6 @@ if (pending.length) {
   const parts = [];
   if (apps.length > 1 && !picked) parts.push(`--app <${apps.map((a) => a.rel).join('|')}>`);
   if (!cfg.url) parts.push(detectedUrl?.url ? `--url ${detectedUrl.url}` : '--url <SITE>');
-  if (engines === null) parts.push('--engines <naver,yahoo|none>');
   if (!cfg.aiPolicy) parts.push('--ai-policy <open|cite-only|closed>');
   for (const k of ['google', 'bing', 'naver']) if (!tokens[k]) parts.push(`[--${k}-token X]`);
   if (!cfg.accessLog) parts.push(detectedLog ? `[--access-log ${detectedLog}]` : '[--access-log <file>]');

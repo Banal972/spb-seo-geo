@@ -20,8 +20,8 @@ const proj = (files = {}) => {
 
 test('a fresh project has every question outstanding, in order', () => {
   const out = run(proj({ 'package.json': '{"name":"x"}' }));
-  assert.match(out, /7 still to ask/);
-  const order = ['site URL', 'Naver', 'Yahoo', 'AI training policy', 'verification tokens', 'access log', 'optional files'];
+  assert.match(out, /5 still to ask/);
+  const order = ['site URL', 'AI training policy', 'verification tokens', 'access log', 'optional files'];
   let at = -1;
   for (const label of order) {
     const i = out.indexOf(label);
@@ -37,10 +37,10 @@ test('a detected URL turns the first question into a confirmation', () => {
   assert.match(out, /Is https:\/\/aaa\.com the right address\?/);
 });
 
-test('each engine is one question — never inferred from Korean content', () => {
+test('engines are not asked about — the answer changes only advisory lines', () => {
   const out = run(proj({ 'package.json': '{"homepage":"https://aaa.co.kr"}', 'index.html': '<html lang="ko"><body>한국어</body></html>' }));
-  assert.match(out, /Do you want to cover Naver \(Korea\)\?/);
-  assert.match(out, /Do you want to cover Yahoo! JAPAN \(Japan\)\?/);
+  assert.doesNotMatch(out, /Do you want to cover/);
+  assert.match(out, /optional engines\s+not chosen — both listed as available/);
 });
 
 test('answers already saved are not asked again', () => {
@@ -54,11 +54,10 @@ test('answers already saved are not asked again', () => {
   assert.doesNotMatch(out, /ask:/);
 });
 
-test('the suggested setup command carries one --engines, not one per engine', () => {
+test('the suggested setup command does not ask for an engine choice', () => {
   const out = run(proj({ 'package.json': '{"name":"x"}' }));
   const cmd = out.split('\n').find((l) => l.includes('setup.mjs'));
-  assert.equal((cmd.match(/--engines/g) || []).length, 1);
-  assert.match(cmd, /--engines <naver,yahoo\|none>/);
+  assert.equal((cmd.match(/--engines/g) || []).length, 0);
 });
 
 test('an access log in the repo is offered rather than asked about blindly', () => {

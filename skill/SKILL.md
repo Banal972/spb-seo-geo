@@ -26,7 +26,9 @@ node <DIR>/scripts/intake.mjs
 
 It prints what is known, what is unanswered, and **the tradeoff for each choice**. Ask one at a time and wait — never as a form, never answering for them, and **always give the cost with the option**. `references/choices.md` has the evidence if they dig.
 
-Order: **which site** (a monorepo often holds several — never pick one yourself), address, Naver, Yahoo, AI policy, tokens, access log, optional files. Anything already in `.spb-seo-geo.json` is skipped — a first-run conversation, not a recurring one.
+Order: **which site** (a monorepo often holds several — never pick one yourself), address, AI policy, tokens, access log, optional files. Anything already in `.spb-seo-geo.json` is skipped — a first-run conversation, not a recurring one.
+
+**Naver and Yahoo are not asked about** — every rule runs regardless, and choosing only hides a few advisory lines. Both stay listed as available; if the user says they do or do not care about a market, pass `--engines naver,yahoo` or `--engines none` then.
 
 The site URL is usually already in the project, so that one is a confirmation. Save the answers in one `setup` call (intake prints it) and show the file preview before writing.
 
@@ -67,9 +69,7 @@ Exit codes: `0` clear · `1` critical · `2` warnings · `3` error
 
 ## Optional engines
 
-Nothing is gated — allowing a crawler is free, so every rule runs regardless. Only console work is optional; `todo` prints it under "Optional engines".
-
-**Never infer an engine from the site's language.** Content says what language it is written in, not which markets its owner wants — a `.kr` site may be going after Japan. Ask about each engine, and pass what the user says: `--engines naver,yahoo` or `--engines none`. Yahoo's answer is "nothing to register" — relay what `todo` prints.
+Console work for Naver and Yahoo is the only optional part; `todo` prints it under "Optional engines", with both always listed. **Never infer an engine from the site's language** — content says what language it is in, not which markets its owner wants, and a `.kr` site may be going after Japan. Yahoo's answer is "nothing to register"; relay what `todo` prints.
 
 ## Read only when you need detail
 

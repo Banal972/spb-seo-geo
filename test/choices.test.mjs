@@ -19,7 +19,7 @@ const fresh = () => {
 const out = run(fresh());
 
 test('every open question carries its tradeoff', () => {
-  for (const q of ['AI training policy', 'verification tokens', 'access log', 'optional files', 'Naver (Korea)', 'Yahoo! JAPAN']) {
+  for (const q of ['AI training policy', 'verification tokens', 'access log', 'optional files']) {
     const i = out.indexOf(q);
     assert.ok(i > -1, `${q} asked`);
     const block = out.slice(i, out.indexOf('  ?', i + 5) > -1 ? out.indexOf('  ?', i + 5) : undefined);
