@@ -80,3 +80,21 @@ test('under ai-policy=cite-only, allowed training bots are flagged as policy mis
   const r = judge(f, { engines: null, aiPolicy: 'cite-only' });
   assert.equal(r.findings.find((x) => x.id === 'GEO-02').status, 'info');
 });
+
+// A low-effort model relayed every count from an --only=seo run correctly and silently
+// dropped the line saying GEO had not been checked. The reader saw "26 pass, no problems"
+// for what was two thirds of an audit. The line has to read as a loss, not as a flag.
+test('an --only run says what it did not check, in the reader\'s terms', () => {
+  const f = fixture();
+  const seo = judge(f, { only: 'seo' });
+  assert.ok(seo.counts.outOfScope > 0, 'seo-only leaves geo rules unevaluated');
+  const text = renderScan(seo, f, {});
+  assert.match(text, /NOT CHECKED: AI citation \(GEO\)/);
+  assert.match(text, /not the full picture/i);
+
+  const geo = judge(f, { only: 'geo' });
+  assert.match(renderScan(geo, f, {}), /NOT CHECKED: classic search \(SEO\)/);
+
+  // A full run must not claim anything was skipped.
+  assert.doesNotMatch(renderScan(judge(f, {}), f, {}), /NOT CHECKED/);
+});

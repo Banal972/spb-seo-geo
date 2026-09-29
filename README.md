@@ -166,9 +166,11 @@ Checked against three live sites (a Next.js monorepo, a marketing site, a Vite S
 
 Still open:
 
-- Whether cheaper models (DeepSeek, Kimi, …) follow `SKILL.md` as written. Untested: the
-  Codex install here cannot select a small model. Verdicts come from the script, so the
-  output should not vary — but discovery and obedience might.
+- Whether the very cheapest models follow `SKILL.md`. A low-reasoning run has now been
+  done and relayed every count exactly, picked the right app in a monorepo, and changed
+  no files — but it silently dropped the line saying GEO had not been checked, so that
+  line is now phrased as a loss rather than a flag. Smaller models than that are still
+  untested.
 - The 20% Hangul / 5% kana thresholds for suggesting a regional engine are judgement
   calls, not measurements.
 - **Gemini CLI**: the `.toml` command and the `.agents/skills` path were checked against

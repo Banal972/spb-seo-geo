@@ -97,7 +97,16 @@ export function renderScan(result, facts, opts = {}) {
   }
 
   if (c.outOfScope) {
-    L.push(`⏭ ${c.outOfScope} rules outside --only=${result.only} were not evaluated — drop --only for the full audit`, '');
+    // Phrased as what the reader loses, not as a flag they passed. A low-effort model
+    // relayed every count correctly and dropped this line, leaving "SEO only" looking
+    // like a full audit to someone who does not know GEO is a separate thing.
+    const missing = result.only === 'seo' ? 'AI citation (GEO)' : 'classic search (SEO)';
+    const other = result.only === 'seo' ? 'geo' : 'seo';
+    L.push(
+      `⏭ NOT CHECKED: ${missing} — ${c.outOfScope} rules skipped because this run was "${result.only}" only.`,
+      `   This is not the full picture. Say so, and offer "${other}" or a run with no argument.`,
+      '',
+    );
   }
 
   if (result.meta.stale.length) {
