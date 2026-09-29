@@ -3,6 +3,8 @@ import { get, pool } from './http.mjs';
 import { parseHtml } from './html.mjs';
 import { parseSitemap, parseFeed } from './xml.mjs';
 import { parseRobots } from './robots.mjs';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { enginesPhase1, enginesPhase2 } from './engines.mjs';
 import { analyze } from './accesslog.mjs';
 import { log } from './args.mjs';
@@ -63,14 +65,26 @@ export async function collect({ url, config = {}, options = {} }) {
   facts.sitemapEntries = facts.sitemaps.flatMap((s) => (s.parsed?.entries || []));
 
   // Sample pages
+  // A sitemap can list other sitemaps, feeds or assets. Parsing those as HTML produced a
+  // cascade of false failures (no title, no canonical, broken headings) on real sites.
+  const looksLikePage = (u) => !/\.(xml|json|txt|rss|atom|pdf|png|jpe?g|webp|svg|gz|csv|ico)(\?|$)/i.test(u);
   const sampleUrls = facts.sitemapEntries
     .map((e) => e.loc)
-    .filter((u) => u && u !== homeRes.url)
+    .filter((u) => u && u !== homeRes.url && looksLikePage(u))
     .slice(0, SAMPLE_CAP);
   if (sampleUrls.length) {
     log(`· fetching: ${sampleUrls.length} sample pages`);
     const res = await pool(sampleUrls, (u) => get(u));
-    facts.samples = res.map((r) => ({ url: r.requested, res: r, parsed: r.body ? Object.assign(parseHtml(r.body), { url: r.url }) : null }));
+    // Trust the served content type over the URL shape — the real guard.
+    facts.samples = res.map((r) => {
+      const isHtml = /text\/html|application\/xhtml/i.test(r.contentType || '');
+      return {
+        url: r.requested, res: r, notHtml: !isHtml && r.ok,
+        parsed: r.body && isHtml ? Object.assign(parseHtml(r.body), { url: r.url }) : null,
+      };
+    });
+    const skippedNonHtml = facts.samples.filter((x) => x.notHtml).length;
+    if (skippedNonHtml) log(`· ${skippedNonHtml} sampled URLs were not HTML — excluded from page checks`);
     // Re-check engine signals across the samples too
     facts.engines = enginesPhase2(p1, [facts.home, ...facts.samples]);
   }
@@ -111,4 +125,27 @@ export async function collect({ url, config = {}, options = {} }) {
   }
 
   return facts;
+}
+
+// What already exists in the project? A file that is committed but not yet deployed is a
+// different problem from a file that was never created, and the advice differs.
+export function collectLocalFiles(root, fw) {
+  const dirs = [fw?.publicDir, 'public', 'static', '.'].filter(Boolean);
+  const found = { verify: [], robots: null, sitemap: null, rss: null, llms: null, indexNowKeys: [] };
+  for (const d of dirs) {
+    const dir = join(root, d);
+    let entries = [];
+    try { entries = readdirSync(dir); } catch { continue; }
+    for (const name of entries) {
+      const rel = d === '.' ? name : `${d}/${name}`;
+      if (/^robots\.txt$/i.test(name)) found.robots ||= rel;
+      else if (/^sitemap.*\.xml$/i.test(name)) found.sitemap ||= rel;
+      else if (/^(rss|feed|atom|index)\.xml$/i.test(name)) found.rss ||= rel;
+      else if (/^llms\.txt$/i.test(name)) found.llms ||= rel;
+      else if (/^(naver[a-z0-9]*\.html|google[a-z0-9]*\.html|BingSiteAuth\.xml|yandex_[a-z0-9]*\.html)$/i.test(name)) found.verify.push(rel);
+      else if (/^[0-9a-f]{16,64}\.txt$/i.test(name)) found.indexNowKeys.push(rel);
+    }
+    if (found.robots || found.verify.length) break;
+  }
+  return found;
 }

@@ -26,13 +26,11 @@ node <DIR>/scripts/intake.mjs
 
 This prints what is already known and what is still unanswered, in order. **Ask the user those questions one at a time and wait for each answer** — do not dump them all at once, and do not answer them yourself.
 
-The order matters: the site address first, then Naver, then Yahoo, then the AI training policy, then verification tokens, then an access log, then optional files. Anything already saved in `.spb-seo-geo.json` is skipped, so this is a first-run conversation, not a recurring one.
+The order matters: **which site** (a monorepo often holds several — never pick one yourself), then the address, then Naver, then Yahoo, then the AI training policy, then verification tokens, then an access log, then optional files. Anything already saved in `.spb-seo-geo.json` is skipped, so this is a first-run conversation, not a recurring one.
 
-The site URL is usually already in the project, so that question is a confirmation ("is this the right address?") rather than an open one. Engines are asked by name and never inferred — see below.
+The site URL is usually already in the project, so that question is a confirmation rather than an open one. Save every answer in one `setup` call (intake prints the exact command) and show the file preview before writing anything.
 
-Save every answer in one `setup` call (intake prints the exact command), and show the file preview before writing anything.
-
-Later runs need no flags at all:
+Later runs need no flags:
 
 ```
 node <DIR>/scripts/scan.mjs   [--only seo|geo] [--verbose] [--json]
@@ -53,7 +51,7 @@ node <DIR>/scripts/submit.mjs [--since HEAD~1]
 
 ## Language
 
-**Answer in whatever language the user writes in.** The report is an intermediate artifact, not the answer — translate its findings rather than pasting lines verbatim. Keep rule IDs, user-agent names and paths as-is.
+**Answer in whatever language the user writes in.** The report is an intermediate artifact — translate its findings rather than pasting lines. Keep rule IDs, user agents and paths as-is.
 
 ## Reading the report
 
@@ -82,9 +80,14 @@ Nothing is gated — allowing a crawler is free, so every rule runs regardless. 
 
 `<DIR>/references/` — `google.md` · `naver.md` · `bing.md` · `yahoo.md` · `geo.md`
 
+## Two things the audit already handles for you
+
+- **If a plugin generates `robots.txt`** (`next-sitemap` and friends), `apply` prints the snippet for *that tool's config* instead of writing a file the next build would overwrite. Relay the snippet as the fix.
+- **Something already in the repo but not deployed** reads as "exists locally, deploy it", not as missing. Never tell someone to create what they already created.
+
 ## GEO is measured, not assumed
 
-With an access log the report prints an **AI crawler activity** block: which citation bots fetched the site, and whether a real person arrived through an AI product. Relay it — it is the hardest data in the report. `citation none` means nothing can cite the site however good the content is; lead with that.
+With an access log the report prints an **AI crawler activity** block: which citation bots fetched the site, and whether a real person arrived through an AI product. Relay it — it is the hardest data in the report. `citation none` means nothing can cite the site however good its content is.
 
 ## The two that come up most
 

@@ -43,6 +43,7 @@ if (args['ai-policy']) patch.aiPolicy = String(args['ai-policy']);
 if (args['with-rss']) patch.withRss = true;
 if (args['with-llms-txt']) patch.withLlmsTxt = true;
 if (args['access-log']) patch.accessLog = String(args['access-log']);
+if (args.app) patch.app = String(args.app);
 
 // Verification tokens end up in the page source anyway, so storing them is safe and
 // means apply can place the tags on every later run without asking again.
@@ -57,6 +58,7 @@ const path = saveConfig(patch, root);
 const cfg = loadConfig(root);
 
 const L = ['Saved to ' + path.replace(root + '/', ''), ''];
+if (cfg.app) L.push(`  app         ${cfg.app}`);
 L.push(`  site        ${cfg.url}`);
 L.push(`  engines     ${cfg.engines || 'not chosen — every optional engine step will be listed'}`);
 L.push(`  ai-policy   ${cfg.aiPolicy || 'open (default)'}`);
@@ -67,6 +69,7 @@ if (extras.length) L.push(`  also build  ${extras.join(', ')}`);
 out(L.join('\n'));
 
 const pass = ['--dir', root];
+if (cfg.app) pass.push('--app', cfg.app);
 if (args.verbose) pass.push('--verbose');
 
 const step = (name, extra = []) => {

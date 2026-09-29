@@ -7,22 +7,39 @@
 import { parseArgs, out, EXIT } from './lib/args.mjs';
 import { findRoot, loadConfig } from './lib/config.mjs';
 import { detectSiteUrl, detectAccessLog } from './lib/site.mjs';
-import { detectFramework } from './lib/framework.mjs';
+import { detectFramework, detectApps } from './lib/framework.mjs';
 import { parseEngines, OPTIONAL_ENGINES, LABEL } from './lib/engines.mjs';
+import { join } from 'node:path';
 
 const args = parseArgs();
 const root = args.dir ? String(args.dir) : findRoot();
 const cfg = loadConfig(root);
-const fw = detectFramework(root);
+const apps = detectApps(root);
+const picked = cfg.app || (args.app ? String(args.app) : null);
+const appRoot = picked ? join(root, picked) : (apps.length === 1 ? apps[0].dir : root);
+const fw = detectFramework(appRoot);
 
-const detectedUrl = cfg.url ? null : detectSiteUrl(root);
-const detectedLog = cfg.accessLog ? null : detectAccessLog(root);
+const detectedUrl = cfg.url ? null : detectSiteUrl(appRoot);
+const detectedLog = cfg.accessLog ? null : detectAccessLog(appRoot);
 const engines = parseEngines(cfg.engines);
 const tokens = cfg.tokens || {};
 const haveTokens = ['google', 'bing', 'naver'].filter((k) => tokens[k]);
 
 const steps = [];
 const ask = (n, label, state, question, flag) => steps.push({ n, label, state, question, flag });
+
+// 0 — a monorepo usually holds several sites, each with its own domain. Never pick one
+// silently: the wrong choice makes every later answer wrong too.
+if (apps.length > 1 && !picked) {
+  const lines = apps.map((a) => {
+    const u = detectSiteUrl(a.dir);
+    return `${a.rel} (${a.name}${u.url ? ` → ${u.url}` : ''})`;
+  });
+  ask(0, 'which site', `${apps.length} apps in this repo`,
+    `This repo holds several sites — which one? ${lines.join(' · ')}`, `--app ${apps[0].rel}`);
+} else if (picked) {
+  ask(0, 'which site', `${picked} (saved)`, null, null);
+}
 
 // 1 — the site. Confirm a detection rather than accepting it silently; ask outright if none.
 if (cfg.url) {
@@ -77,6 +94,7 @@ if (pending.length) {
   L.push('Skip anything the user does not have. Then save every answer in a single call:');
   L.push('');
   const parts = [];
+  if (apps.length > 1 && !picked) parts.push(`--app <${apps.map((a) => a.rel).join('|')}>`);
   if (!cfg.url) parts.push(detectedUrl?.url ? `--url ${detectedUrl.url}` : '--url <SITE>');
   if (engines === null) parts.push('--engines <naver,yahoo|none>');
   if (!cfg.aiPolicy) parts.push('--ai-policy <open|cite-only|closed>');
@@ -91,6 +109,6 @@ if (pending.length) {
 } else {
   L.push('Nothing left to ask. Run scan.mjs (add --write to apply).');
 }
-L.push('', `framework: ${fw.name || 'unknown'}`);
+L.push('', `framework: ${fw.name || 'unknown'}${fw.fromWorkspace ? ` (${fw.fromWorkspace})` : ''}${picked ? ` · app ${picked}` : ''}`);
 out(L.join('\n'));
 process.exit(EXIT.OK);

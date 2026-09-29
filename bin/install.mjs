@@ -155,6 +155,12 @@ console.log(`
    update:  npx spb-seo-geo@latest
    scope:   ${scope === 'global' ? 'global' : 'this project'} · nothing was written for harnesses you did not pick`);
 
+if (scope === 'project') {
+  console.log(`
+   git:     commit .spb-seo-geo.json (it holds your answers), and add the skill folder
+            to .gitignore unless you want it vendored for your team`);
+}
+
 function sep() { return process.platform === 'win32' ? '\\' : '/'; }
 function short(p) { return p.startsWith(CWD) ? relative(CWD, p) : p.replace(HOME, '~'); }
 function isLink(p) { try { return lstatSync(p).isSymbolicLink(); } catch { return false; } }

@@ -300,7 +300,8 @@
           "google-site-verification"
         ],
         "unknownIfMissing": true,
-        "reason": "ownership may already be verified by the HTML file method"
+        "reason": "ownership may already be verified by the HTML file method",
+        "localMatch": "(^|/)google[a-z0-9]*\\.html$"
       },
       "fix": "meta-verify-google",
       "problem": "google-site-verification meta tag is absent",
@@ -433,7 +434,8 @@
           "naver-site-verification"
         ],
         "unknownIfMissing": true,
-        "reason": "ownership may already be verified by the HTML file method, and that filename cannot be guessed"
+        "reason": "ownership may already be verified by the HTML file method, and that filename cannot be guessed",
+        "localMatch": "(^|/)naver[a-z0-9]*\\.html$"
       },
       "fix": "meta-verify-naver",
       "problem": "Naver ownership verification tag is absent",
@@ -537,7 +539,8 @@
           "/BingSiteAuth.xml"
         ],
         "unknownIfMissing": true,
-        "reason": "ownership may already be verified via DNS"
+        "reason": "ownership may already be verified via DNS",
+        "localMatch": "(^|/)BingSiteAuth\\.xml$"
       },
       "fix": "meta-verify-bing",
       "problem": "no Bing ownership signal (msvalidate.01 or BingSiteAuth.xml)",

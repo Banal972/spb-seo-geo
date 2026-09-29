@@ -18,7 +18,10 @@ export const checkers = {
     const g = needRemote(f); if (g) return g;
     const res = a.path === '/robots.txt' ? f.robots?.res : f.files[a.path];
     if (!res) return UNKNOWN('not fetched');
-    if (!res.ok) return { ok: false, detail: res.error ? `request failed: ${res.error}` : `HTTP ${res.status}` };
+    if (!res.ok) {
+      const localHint = a.path === '/robots.txt' && f.local?.robots ? ` — ${f.local.robots} exists locally but is not live yet` : '';
+      return { ok: false, detail: (res.error ? `request failed: ${res.error}` : `HTTP ${res.status}`) + localHint };
+    }
     if (a.notHtml && /text\/html/i.test(res.contentType)) {
       return { ok: false, detail: `returns HTML (${res.contentType}) — crawlers cannot parse it` };
     }
@@ -152,6 +155,7 @@ export const checkers = {
     const g = needRemote(f); if (g) return g;
     if (!f.llms) return UNKNOWN('not checked');
     if (f.llms.error) return UNKNOWN(`request failed: ${f.llms.error}`);
+    if (!f.llms.ok && f.local?.llms) return { ok: false, detail: `${f.local.llms} exists locally but is not live yet` };
     return { ok: f.llms.ok, detail: f.llms.ok ? 'present' : 'absent (optional)' };
   },
 
@@ -199,13 +203,22 @@ export const checkers = {
       const res = f.files[p];
       if (res?.ok) return { ok: true, detail: `verified via ${p}` };
     }
+    // A verification file sitting in the repo is a different situation from nothing at all.
+    const localFile = (f.local?.verify || []).find((v) => a.localMatch && new RegExp(a.localMatch, 'i').test(v));
+    if (localFile) {
+      return { ok: true, detail: `verified by file ${localFile}` + (f.remote ? ' (deployed copy not probed — filename is only known locally)' : '') };
+    }
     if (a.unknownIfMissing) return UNKNOWN(`${missing.join(', ')} absent — ${a.reason || 'another verification method may have been used'}`);
     return { ok: false, detail: `missing: ${missing.join(', ')}` };
   },
 
   indexNowKey(f) {
     const g = needRemote(f); if (g) return g;
-    if (!f.indexNowKey) return { ok: false, detail: 'no key configured (.spb-seo-geo.json)' };
+    if (!f.indexNowKey) {
+      const local = f.local?.indexNowKeys?.[0];
+      if (local) return { ok: false, detail: `key file ${local} exists locally but is not live yet — deploy it` };
+      return { ok: false, detail: 'no key configured (.spb-seo-geo.json)' };
+    }
     const { key, res } = f.indexNowKey;
     if (!res.ok) return { ok: false, detail: `/${key}.txt returned HTTP ${res.status}` };
     if (res.body.trim() !== key) return { ok: false, detail: `/${key}.txt content does not match the key` };
@@ -383,7 +396,10 @@ export const checkers = {
   rssPresent(f) {
     const g = needRemote(f); if (g) return g;
     const good = f.feeds.filter((x) => x.parsed?.valid && x.parsed.items.length > 0);
-    if (!good.length) return { ok: false, detail: f.feeds.length ? 'found a feed but it has no valid items' : 'no feed found' };
+    if (!good.length) {
+      if (f.local?.rss) return { ok: false, detail: `${f.local.rss} exists locally but is not live yet — deploy it` };
+      return { ok: false, detail: f.feeds.length ? 'found a feed but it has no valid items' : 'no feed found' };
+    }
     const first = good[0];
     return { ok: true, detail: `${first.url} · ${first.parsed.items.length} items${first.declared ? ' (declared in head)' : ''}` };
   },

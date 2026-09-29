@@ -91,6 +91,30 @@ export function staleBlocks(existing = '', uas) {
   return out;
 }
 
+// When a generator owns robots.txt, the fix belongs in its config — not in a file it
+// overwrites. Emit the shape that tool expects.
+export function robotsConfigSnippet(shape, { policy = 'open', sitemapUrl } = {}) {
+  const allow = [...AI_BOTS.cite, ...AI_BOTS.user];
+  const train = AI_BOTS.train;
+  if (shape === 'next-sitemap') {
+    const L = ['robotsTxtOptions: {', '  policies: ['];
+    for (const ua of allow) L.push(`    { userAgent: '${ua}', allow: '/' },`);
+    for (const ua of train) L.push(`    { userAgent: '${ua}', ${policy === 'open' ? "allow: '/'" : "disallow: '/'"} },`);
+    L.push('  ],');
+    if (sitemapUrl) L.push(`  additionalSitemaps: ['${sitemapUrl}'],`);
+    L.push('},');
+    return L.join('\n');
+  }
+  if (shape === 'astro') {
+    const L = ['robotsTxt({', '  policy: ['];
+    for (const ua of allow) L.push(`    { userAgent: '${ua}', allow: '/' },`);
+    for (const ua of train) L.push(`    { userAgent: '${ua}', ${policy === 'open' ? "allow: '/'" : "disallow: '/'"} },`);
+    L.push('  ],', '})');
+    return L.join('\n');
+  }
+  return null;
+}
+
 export const indexNowKey = () => randomBytes(16).toString('hex');
 export const indexNowKeyFile = (key) => key + '\n';
 
