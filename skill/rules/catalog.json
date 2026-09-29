@@ -1,14 +1,13 @@
 {
   "version": "0.1.0",
   "updated": "2026-09-29",
-  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification. Rules are evaluated for every site: allowing a crawler is free regardless of target market. Region-specific work that depends on registering with a console is reported as info and routed to todo, never as a failure.",
+  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification. Every rule is evaluated for every site: allowing a crawler is free regardless of which engines you target. Work that depends on registering with an optional engine's console carries `region` (the engine key), is reported as info, and is routed to todo — never as a failure.",
   "rules": [
     {
       "id": "CORE-01",
       "engine": "core",
       "severity": "critical",
       "autofix": true,
-      "market": "all",
       "check": "urlOk",
       "args": {
         "path": "/robots.txt",
@@ -26,7 +25,6 @@
       "engine": "core",
       "severity": "critical",
       "autofix": false,
-      "market": "all",
       "check": "robotsNotBlockingAll",
       "args": {},
       "problem": "robots.txt is blocking the entire site",
@@ -40,7 +38,6 @@
       "engine": "core",
       "severity": "critical",
       "autofix": true,
-      "market": "all",
       "check": "sitemapDeclared",
       "args": {},
       "fix": "sitemap",
@@ -55,7 +52,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "sitemapLimits",
       "args": {
         "maxUrls": 50000,
@@ -72,7 +68,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "sitemapAbsoluteSameHost",
       "args": {},
       "problem": "sitemap contains relative URLs or URLs on another host (www/non-www, http/https mixed)",
@@ -86,7 +81,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "sitemapSampleHealthy",
       "args": {},
       "problem": "sitemap contains 404, redirecting or noindex URLs",
@@ -100,7 +94,6 @@
       "engine": "core",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "sitemapLastmod",
       "args": {},
       "fix": "sitemap",
@@ -115,7 +108,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "homeRedirectChain",
       "args": {
         "max": 1
@@ -131,7 +123,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "canonicalSelf",
       "args": {},
       "problem": "canonical is missing or does not point at the page itself",
@@ -145,7 +136,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "titleDescription",
       "args": {},
       "problem": "title or meta description is missing, or duplicated across sampled pages",
@@ -159,7 +149,6 @@
       "engine": "core",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "llmsTxt",
       "args": {},
       "fix": "llmstxt",
@@ -175,7 +164,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "textRendered",
       "args": {
         "minChars": 500
@@ -191,7 +179,6 @@
       "engine": "core",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "internalLinksOk",
       "args": {},
       "problem": "some internal links from the home page return 4xx or 5xx",
@@ -205,7 +192,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "langMatchesContent",
       "args": {},
       "problem": "<html lang> does not match the actual content language",
@@ -219,7 +205,6 @@
       "engine": "core",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "metaPresent",
       "args": {
         "properties": [
@@ -240,7 +225,6 @@
       "engine": "core",
       "severity": "warn",
       "autofix": true,
-      "market": "all",
       "check": "indexNowKey",
       "args": {},
       "fix": "indexnow-key",
@@ -255,7 +239,6 @@
       "engine": "google",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "metaPresent",
       "args": {
         "names": [
@@ -276,7 +259,6 @@
       "engine": "google",
       "severity": "critical",
       "autofix": false,
-      "market": "all",
       "check": "noindexAbsent",
       "args": {},
       "problem": "noindex is applied (meta or X-Robots-Tag)",
@@ -290,7 +272,6 @@
       "engine": "google",
       "severity": "critical",
       "autofix": false,
-      "market": "all",
       "check": "snippetControlsAbsent",
       "args": {},
       "problem": "nosnippet or max-snippet is suppressing snippets",
@@ -304,7 +285,6 @@
       "engine": "google",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "botPolicyInfo",
       "args": {
         "ua": "Google-Extended"
@@ -320,7 +300,6 @@
       "engine": "google",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "jsonLdValid",
       "args": {},
       "problem": "JSON-LD structured data has a parse error",
@@ -334,7 +313,6 @@
       "engine": "google",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "localGrep",
       "args": {
         "pattern": "indexing\\.googleapis\\.com"
@@ -350,7 +328,6 @@
       "engine": "google",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "manual",
       "args": {
         "todo": [
@@ -372,7 +349,6 @@
       "engine": "naver",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "metaPresent",
       "args": {
         "names": [
@@ -383,18 +359,17 @@
       },
       "fix": "meta-verify-naver",
       "problem": "Naver ownership verification tag is absent",
-      "action": "Only needed if you want Korean traffic. Register at Search Advisor, then pass the token as --naver-token and we will place the tag",
+      "action": "Register at Naver Search Advisor, then pass the token as --naver-token and we will place the tag",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
       "checked": "2026-09-29",
-      "region": "kr"
+      "region": "naver"
     },
     {
       "id": "NAVER-02",
       "engine": "naver",
       "severity": "critical",
       "autofix": false,
-      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [
@@ -412,16 +387,15 @@
       "engine": "naver",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "rssPresent",
       "args": {},
       "fix": "rss",
       "problem": "no RSS feed (Naver still treats RSS as a first-class input)",
-      "action": "Only needed if you want Korean traffic. Run apply --with-rss to generate one",
+      "action": "Run apply --with-rss to generate one",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
       "checked": "2026-09-29",
-      "region": "kr",
+      "region": "naver",
       "optIn": true
     },
     {
@@ -429,7 +403,6 @@
       "engine": "naver",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "manual",
       "args": {
         "todo": [
@@ -454,18 +427,17 @@
         ]
       },
       "problem": "Naver Search Advisor registration cannot be verified from outside",
-      "action": "Only needed if you want Korean traffic. There is no public API, so do it in the console in order: ownership, RSS, sitemap",
+      "action": "There is no public API. Do it in the console in order: ownership, RSS, sitemap",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
       "checked": "2026-09-29",
-      "region": "kr"
+      "region": "naver"
     },
     {
       "id": "BING-01",
       "engine": "bing",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "metaPresent",
       "args": {
         "names": [
@@ -489,7 +461,6 @@
       "engine": "bing",
       "severity": "critical",
       "autofix": false,
-      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [
@@ -507,7 +478,6 @@
       "engine": "bing",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "manual",
       "args": {
         "todo": [
@@ -530,7 +500,6 @@
       "engine": "ai",
       "severity": "critical",
       "autofix": true,
-      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [
@@ -551,7 +520,6 @@
       "engine": "ai",
       "severity": "info",
       "autofix": true,
-      "market": "all",
       "check": "trainingPolicy",
       "args": {
         "uas": [
@@ -576,7 +544,6 @@
       "engine": "ai",
       "severity": "warn",
       "autofix": true,
-      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [
@@ -597,7 +564,6 @@
       "engine": "ai",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "textNotBuriedInImages",
       "args": {
         "minTextPerImage": 80
@@ -613,7 +579,6 @@
       "engine": "ai",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "orphanPages",
       "args": {},
       "problem": "some sitemap pages are unreachable from the home page by internal links",
@@ -627,7 +592,6 @@
       "engine": "ai",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "citationSignals",
       "args": {},
       "problem": "few statistics, quotations or outbound citations",
@@ -641,7 +605,6 @@
       "engine": "ai",
       "severity": "info",
       "autofix": false,
-      "market": "all",
       "check": "structuredElements",
       "args": {},
       "problem": "no structured elements such as lists or tables",
@@ -655,7 +618,6 @@
       "engine": "yahoo",
       "severity": "warn",
       "autofix": false,
-      "market": "all",
       "check": "robotsAllows",
       "args": {
         "uas": [

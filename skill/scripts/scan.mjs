@@ -10,7 +10,7 @@ if (args.help) {
   out([
     'spb-seo-geo scan — audit search and AI visibility',
     '',
-    '  node scan.mjs --url https://example.com [--dir .] [--market auto|kr|global]',
+    '  node scan.mjs --url https://example.com [--dir .] [--engines naver,yahoo|none]',
     '                [--json] [--verbose] [--ai-policy open|cite-only|closed]',
     '',
     'Exit codes: 0 all clear · 1 critical failure · 2 warnings only · 3 execution error',

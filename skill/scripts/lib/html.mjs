@@ -67,7 +67,7 @@ export function parseHtml(html = '') {
   };
 }
 
-// Script ratios. The most reliable signals in market detection, because unlike a
+// Script ratios. The most reliable signals for suggesting optional engines, because unlike a
 // lang attribute they come from the content itself and cannot be left at a framework default.
 // Japanese is detected by kana, not kanji: kanji is shared with Chinese, kana is not.
 export function scriptRatios(text = '') {

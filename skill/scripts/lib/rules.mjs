@@ -1,12 +1,12 @@
-// Every rule is evaluated for every site. Allowing a crawler is free regardless of
-// which countries you target, so gating checks on a "market" only created blind spots.
-// Region-specific work that needs a console account is marked `region` and surfaces in
-// todo as optional — it is never reported as a failure (invariant 7).
-export function partitionByMarket(rules, markets = null) {
-  const filter = Array.isArray(markets) ? new Set(markets) : null;
+// Every rule is evaluated for every site. Allowing a crawler is free regardless of which
+// engines you target, so gating checks on an engine selection only created blind spots.
+// Work that needs an optional engine's console account is marked `region` (the engine key)
+// and surfaces in todo as optional — never as a failure (invariant 7).
+export function partitionByEngines(rules, engines = null) {
+  const filter = Array.isArray(engines) ? new Set(engines) : null;
   const active = [], skipped = [];
   for (const r of rules) {
-    // The only thing a market filter does is hide optional regional advice on request.
+    // Selecting engines only hides optional console advice; it never hides a verdict.
     if (filter && r.region && !filter.has(r.region)) skipped.push(r);
     else active.push(r);
   }

@@ -1,5 +1,5 @@
 // Rendering. stdout carries the report only. Passes as counts, failures as sentences.
-import { marketSentence } from './market.mjs';
+import { enginesSentence, LABEL as ENGINE_LABEL } from './engines.mjs';
 import { bySeverity } from './judge.mjs';
 import { isTTY } from './args.mjs';
 
@@ -16,8 +16,8 @@ export function renderScan(result, facts, opts = {}) {
     `${result.findings.length + c.skipped} rules`,
   ];
   L.push(head.join('  ·  '), '');
-  const ms = marketSentence(facts.market);
-  if (ms.length) L.push(...ms, '');
+  const es = enginesSentence(facts.engines);
+  if (es.length) L.push(...es, '');
   L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked   ⏭ ${c.skipped} skipped` + (c.info ? `   · ${c.info} note` : ''), '');
 
   const sorted = [...result.findings].sort(bySeverity);
@@ -59,11 +59,10 @@ export function renderScan(result, facts, opts = {}) {
   }
 
   if (c.skipped) {
-    const byRegion = {};
-    for (const r of result.skippedRules) (byRegion[r.region] ||= []).push(r.id);
-    const label = { kr: 'Naver (Korea)', jp: 'Yahoo! JAPAN (Japan)' };
-    for (const [rg, ids] of Object.entries(byRegion)) {
-      L.push(`⏭ ${ids.length} optional ${label[rg] || rg} items hidden (${ids.join(' · ')}) — drop --market to see them`);
+    const byEngine = {};
+    for (const r of result.skippedRules) (byEngine[r.region] ||= []).push(r.id);
+    for (const [eng, ids] of Object.entries(byEngine)) {
+      L.push(`⏭ ${ids.length} optional ${ENGINE_LABEL[eng] || eng} items hidden (${ids.join(' · ')}) — add it with --engines to see them`);
     }
     L.push('');
   }
@@ -111,7 +110,7 @@ export function renderJson(result, facts) {
   return JSON.stringify({
     tool: 'spb-seo-geo', version: '0.1.0',
     target: facts.baseUrl, framework: facts.framework || null,
-    market: { markets: facts.market.markets, answered: facts.market.answered, suggested: facts.market.suggested },
+    engines: { selected: facts.engines.engines, answered: facts.engines.answered, suggested: facts.engines.suggested },
     counts: result.counts,
     findings: result.findings.map(({ id, engine, severity, grade, status, detail, problem, action, evidence, fixable, fix }) =>
       ({ id, engine, severity, grade, status, detail, problem, action, evidence, fixable, fix })),

@@ -6,7 +6,7 @@
 // apply can finish the job instead of handing half of it back as "add this yourself".
 import { parseArgs, out, log, EXIT } from './lib/args.mjs';
 import { findRoot, loadConfig, saveConfig } from './lib/config.mjs';
-import { parseMarkets, MARKETS } from './lib/market.mjs';
+import { parseEngines } from './lib/engines.mjs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -19,7 +19,7 @@ if (args.help || (!args.url && !loadConfig(findRoot()).url)) {
     'spb-seo-geo setup — answer once, then everything is configured from those answers',
     '',
     '  node setup.mjs --url https://example.com \\',
-    '                 [--market kr,jp|global] [--ai-policy open|cite-only|closed] \\',
+    '                 [--engines naver,yahoo|none] [--ai-policy open|cite-only|closed] \\',
     '                 [--google-token X] [--bing-token X] [--naver-token X] \\',
     '                 [--with-rss] [--with-llms-txt] [--write]',
     '',
@@ -36,8 +36,8 @@ const prev = loadConfig(root);
 const patch = {};
 
 if (args.url) patch.url = String(args.url);
-const market = parseMarkets(args.market);
-if (market) patch.market = market.join(',') || 'global';
+const engines = parseEngines(args.engines ?? args.market);
+if (engines) patch.engines = engines.join(',') || 'none';
 if (args['ai-policy']) patch.aiPolicy = String(args['ai-policy']);
 if (args['with-rss']) patch.withRss = true;
 if (args['with-llms-txt']) patch.withLlmsTxt = true;
@@ -56,7 +56,7 @@ const cfg = loadConfig(root);
 
 const L = ['Saved to ' + path.replace(root + '/', ''), ''];
 L.push(`  site        ${cfg.url}`);
-L.push(`  markets     ${cfg.market || 'not set — all optional regional steps will be listed'}`);
+L.push(`  engines     ${cfg.engines || 'not chosen — every optional engine step will be listed'}`);
 L.push(`  ai-policy   ${cfg.aiPolicy || 'open (default)'}`);
 L.push(`  tokens      ${['google', 'bing', 'naver'].filter((k) => cfg.tokens?.[k]).join(', ') || 'none yet'}`);
 const extras = [cfg.withRss && 'rss', cfg.withLlmsTxt && 'llms.txt'].filter(Boolean);

@@ -1,6 +1,6 @@
 // rules x facts -> findings. No path here lets a model influence the verdict (invariant 9).
 import { checkers } from './checkers.mjs';
-import { loadCatalog, partitionByMarket, daysSince, STALE_DAYS } from './rules.mjs';
+import { loadCatalog, partitionByEngines, daysSince, STALE_DAYS } from './rules.mjs';
 
 const statusFor = (ok, severity) => {
   if (ok === null) return 'unknown';
@@ -8,9 +8,9 @@ const statusFor = (ok, severity) => {
   return severity === 'critical' ? 'fail' : severity === 'warn' ? 'warn' : 'info';
 };
 
-export function judge(facts, { markets = null, aiPolicy = 'open' } = {}) {
+export function judge(facts, { engines = null, aiPolicy = 'open' } = {}) {
   const { rules, rejected, stale } = loadCatalog();
-  const { active, skipped } = partitionByMarket(rules, markets);
+  const { active, skipped } = partitionByEngines(rules, engines);
   facts.aiPolicy = aiPolicy;
 
   const findings = [];

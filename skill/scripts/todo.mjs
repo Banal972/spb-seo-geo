@@ -5,11 +5,8 @@ import { run } from './lib/run.mjs';
 
 const ENGINE_ORDER = ['google', 'bing', 'core', 'ai', 'naver', 'yahoo'];
 const ENGINE_LABEL = { naver: 'Naver', google: 'Google', bing: 'Bing', core: 'Common', ai: 'AI search', yahoo: 'Yahoo' };
-const REGION_LABEL = { kr: 'Korea — Naver', jp: 'Japan — Yahoo! JAPAN' };
-const REGION_NOTE = {
-  kr: 'do these in order or they will not take effect',
-  jp: "Yahoo! JAPAN web search runs on Google's index, so the Google items above already cover ranking. There is no separate console — submit through Search Console. Yahoo outside Japan runs on Bing.",
-};
+const OPT_LABEL = { naver: 'Naver (Korea)', yahoo: 'Yahoo! JAPAN (Japan)' };
+const OPT_NOTE = { naver: 'do these in order or they will not take effect' };
 
 const args = parseArgs();
 
@@ -53,15 +50,31 @@ try {
     print(group, ENGINE_LABEL[engine]);
   }
 
-  if (regional.length) {
-    const sug = Object.keys(facts.market.suggested || {});
-    L.push('Optional — only if you want traffic from these countries');
-    if (sug.length) L.push(`  (signals on this site suggest ${sug.map((k) => REGION_LABEL[k]).join(' and ')} may apply to you)`);
+  const suggestedEngines = Object.keys(facts.engines.suggested || {});
+  const chosen = facts.engines.answered ? facts.engines.engines : suggestedEngines;
+  const showYahoo = chosen.includes('yahoo');
+
+  if (regional.length || showYahoo) {
+    L.push('Optional engines');
+    if (!facts.engines.answered && suggestedEngines.length) {
+      L.push(`  (not chosen yet — signals suggest ${suggestedEngines.map((k) => OPT_LABEL[k]).join(' and ')}; choose with --engines)`);
+    }
     L.push('');
-    for (const rg of ['kr', 'jp']) {
-      const group = regional.filter((i) => i.region === rg);
-      if (group.length) print(group, `  ${REGION_LABEL[rg]}`, REGION_NOTE[rg]);
-      if (group.length && rg === 'kr') L.push('     ⏳ After submitting the sitemap, indexing takes about two weeks — not appearing during that window is normal', '');
+    for (const eng of ['naver', 'yahoo']) {
+      const group = regional.filter((i) => i.region === eng);
+      if (group.length) {
+        print(group, `  ${OPT_LABEL[eng]}`, OPT_NOTE[eng]);
+        if (eng === 'naver') L.push('     ⏳ After submitting the sitemap, indexing takes about two weeks — not appearing during that window is normal', '');
+      } else if (eng === 'yahoo' && showYahoo) {
+        // Answering "yes, Yahoo" must produce something, or it was a fake question.
+        // What it produces is the answer: there is nothing to register, and here is why.
+        L.push(`  ${OPT_LABEL.yahoo}`);
+        L.push("     · Nothing to register — Yahoo! JAPAN has no webmaster console of its own.");
+        L.push("     · Yahoo! JAPAN web search runs on Google's index, so the Google items above already cover ranking and indexing. Submit your sitemap through Google Search Console.");
+        L.push('     · Yahoo outside Japan runs on Bing, so the Bing items cover that.');
+        L.push("     · The one Yahoo-specific check is already in the audit: keep its own Y!J-* crawlers unblocked (YAHOO-01).");
+        L.push('');
+      }
     }
   }
 

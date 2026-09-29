@@ -3,7 +3,7 @@ import { get, pool } from './http.mjs';
 import { parseHtml } from './html.mjs';
 import { parseSitemap, parseFeed } from './xml.mjs';
 import { parseRobots } from './robots.mjs';
-import { marketPhase1, marketPhase2 } from './market.mjs';
+import { enginesPhase1, enginesPhase2 } from './engines.mjs';
 import { log } from './args.mjs';
 
 const FEED_PATHS = ['/rss', '/rss.xml', '/feed', '/feed.xml', '/atom.xml', '/index.xml'];
@@ -13,10 +13,10 @@ const LINK_CAP = 12;
 const abs = (origin, p) => new URL(p, origin).toString();
 
 export async function collect({ url, config = {}, options = {} }) {
-  const facts = { baseUrl: url || null, market: null, samples: [], feeds: [], files: {}, links: [], sitemaps: [] };
+  const facts = { baseUrl: url || null, engines: null, samples: [], feeds: [], files: {}, links: [], sitemaps: [] };
 
-  const p1 = marketPhase1({ option: options.market, saved: config.market, url: url || 'http://x.invalid' });
-  facts.market = p1;
+  const p1 = enginesPhase1({ option: options.engines, saved: config.engines, url: url || 'http://x.invalid' });
+  facts.engines = p1;
 
   if (!url) { facts.remote = false; return facts; }
   facts.remote = true;
@@ -30,7 +30,7 @@ export async function collect({ url, config = {}, options = {} }) {
   if (facts.home.parsed) facts.home.parsed.url = homeRes.url;
 
   // Phase 2 detection: HTML signals such as naver-site-verification and Hangul ratio
-  facts.market = marketPhase2(p1, [facts.home]);
+  facts.engines = enginesPhase2(p1, [facts.home]);
 
   // Sitemap: prefer what robots.txt declares, fall back to conventional paths
   const declared = facts.robots.parsed.sitemaps;
@@ -62,8 +62,8 @@ export async function collect({ url, config = {}, options = {} }) {
     log(`· fetching: ${sampleUrls.length} sample pages`);
     const res = await pool(sampleUrls, (u) => get(u));
     facts.samples = res.map((r) => ({ url: r.requested, res: r, parsed: r.body ? Object.assign(parseHtml(r.body), { url: r.url }) : null }));
-    // Re-check market signals across the samples too
-    facts.market = marketPhase2(p1, [facts.home, ...facts.samples]);
+    // Re-check engine signals across the samples too
+    facts.engines = enginesPhase2(p1, [facts.home, ...facts.samples]);
   }
 
   // llms.txt and ownership verification files
@@ -84,8 +84,8 @@ export async function collect({ url, config = {}, options = {} }) {
   if (declaredFeeds.length) {
     const res = await pool(declaredFeeds.slice(0, 2), (u) => get(u));
     facts.feeds = res.map((r) => ({ url: r.requested, res: r, parsed: r.ok ? parseFeed(r.body) : null, declared: true }));
-  } else if (facts.market.markets.includes('kr')) {
-    log('· probing conventional RSS paths (market=kr)');
+  } else if (!facts.engines.answered || facts.engines.engines.includes('naver')) {
+    log('· probing conventional RSS paths (Naver still uses RSS)');
     const res = await pool(FEED_PATHS.map((p) => abs(origin, p)), (u) => get(u));
     facts.feeds = res.filter((r) => r.ok).map((r) => ({ url: r.requested, res: r, parsed: parseFeed(r.body), declared: false }));
   }

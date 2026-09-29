@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadCatalog, lintRule, partitionByMarket } from '../skill/scripts/lib/rules.mjs';
+import { loadCatalog, lintRule, partitionByEngines } from '../skill/scripts/lib/rules.mjs';
 import { checkers } from '../skill/scripts/lib/checkers.mjs';
 
 const { rules, rejected, stale } = loadCatalog();
@@ -36,28 +36,28 @@ test('the linter rejects a rule without evidence', () => {
   assert.ok(errs.some((e) => e.includes('evidence')));
 });
 
-test('by default every rule is evaluated — no market gate', () => {
-  const { active, skipped } = partitionByMarket(rules, null);
+test('by default every rule is evaluated — no engine gate', () => {
+  const { active, skipped } = partitionByEngines(rules, null);
   assert.equal(skipped.length, 0, 'nothing is hidden unless asked');
   assert.equal(active.length, rules.length);
 });
 
 test('allowing a regional crawler is checked for everyone', () => {
-  const { active } = partitionByMarket(rules, ['jp']);
+  const { active } = partitionByEngines(rules, ['yahoo']);
   // Yeti is Korea's crawler but unblocking it is free, so it must not be gated away
   assert.ok(active.some((r) => r.id === 'NAVER-02'), 'Yeti check is universal');
   assert.ok(active.some((r) => r.id === 'YAHOO-01'), 'Y!J check is universal');
 });
 
-test('a market filter only hides optional console advice', () => {
-  const { active, skipped } = partitionByMarket(rules, ['jp']);
-  assert.ok(skipped.every((r) => r.region === 'kr'));
+test('choosing engines only hides optional console advice', () => {
+  const { active, skipped } = partitionByEngines(rules, ['yahoo']);
+  assert.ok(skipped.every((r) => r.region === 'naver'));
   assert.deepEqual(skipped.map((r) => r.id).sort(), ['NAVER-01', 'NAVER-03', 'NAVER-04']);
   assert.ok(active.some((r) => r.id === 'CORE-16'));
   assert.ok(active.some((r) => r.id === 'CORE-15'));
 });
 
-test('registration-dependent regional rules can never read as failures', () => {
+test('console-dependent optional rules can never read as failures', () => {
   for (const r of rules.filter((x) => x.region)) {
     assert.equal(r.severity, 'info', `${r.id} must be info, not ${r.severity}`);
   }

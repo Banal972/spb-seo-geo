@@ -13,15 +13,15 @@ export async function run(args) {
   const url = args.url ? String(args.url) : config.url || null;
   if (!url && !args.dir) log('! No URL given and none saved. Run setup first, or pass --url.');
 
-  const facts = await collect({ url, config, options: { market: args.market } });
+  const facts = await collect({ url, config, options: { engines: args.engines ?? args.market } });
   facts.dir = root;
   facts.fw = fw;
   facts.framework = fw.name;
 
   const aiPolicy = String(args['ai-policy'] || config.aiPolicy || 'open');
-  // No market filter unless the user explicitly asked to hide a region.
-  const filter = facts.market.answered ? facts.market.markets : null;
-  const result = judge(facts, { markets: filter, aiPolicy });
+  // No engine filter unless the user actually chose.
+  const filter = facts.engines.answered ? facts.engines.engines : null;
+  const result = judge(facts, { engines: filter, aiPolicy });
   return { facts, result, config, root, fw, aiPolicy, url };
 }
 

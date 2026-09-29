@@ -13,13 +13,13 @@ function fixture({ robots = 'User-agent: *\nAllow: /\n', html = '<html lang="ko"
     sitemapEntries: [], files: {}, indexNowKey: null,
     robots: { res: { ok: true, status: 200, contentType: 'text/plain', body: robots, bytes: robots.length }, parsed: parseRobots(robots) },
     home, llms: { ok: false, status: 404 },
-    market: { markets: ['kr'], answered: true, source: '--market', suggested: { kr: ['a.kr domain'] } },
+    engines: { engines: ['naver'], answered: true, source: '--engines', suggested: { naver: ['a.kr domain'] } },
   };
 }
 
 test('blocking a citation bot is a critical failure', () => {
   const f = fixture({ robots: 'User-agent: Claude-SearchBot\nDisallow: /\n' });
-  const r = judge(f, { markets: null });
+  const r = judge(f, { engines: null });
   const geo = r.findings.find((x) => x.id === 'GEO-01');
   assert.equal(geo.status, 'fail');
   assert.ok(geo.detail.includes('Claude-SearchBot'));
@@ -27,32 +27,32 @@ test('blocking a citation bot is a critical failure', () => {
 
 test('nosnippet is a critical failure (it is the precondition for AI citation)', () => {
   const f = fixture({ html: '<html lang="ko"><head><meta name="robots" content="nosnippet"><title>T</title></head><body>본문</body></html>' });
-  const r = judge(f, { markets: null });
+  const r = judge(f, { engines: null });
   assert.equal(r.findings.find((x) => x.id === 'GOOGLE-03').status, 'fail');
 });
 
 test('unknown is never promoted to pass', () => {
   const f = fixture();
-  const r = judge(f, { markets: null });
+  const r = judge(f, { engines: null });
   const naver = r.findings.find((x) => x.id === 'NAVER-04');
   assert.equal(naver.status, 'unknown');
   assert.ok(naver.todo.length >= 3, 'console work is handed to todo');
 });
 
-test('a market filter surfaces what it hid instead of silently dropping it', () => {
+test('choosing engines surfaces what it hid instead of silently dropping it', () => {
   const f = fixture();
-  f.market = { markets: ['jp'], answered: true, source: '--market', suggested: {} };
-  const r = judge(f, { markets: ['jp'] });
+  f.engines = { engines: ['yahoo'], answered: true, source: '--engines', suggested: {} };
+  const r = judge(f, { engines: ['yahoo'] });
   assert.equal(r.counts.skipped, 3);
   assert.equal(r.skippedRules.length, 3);
   const text = renderScan(r, f, {});
   assert.match(text, /3 optional Naver \(Korea\) items hidden/);
-  assert.match(text, /drop --market/);
+  assert.match(text, /--engines/);
 });
 
 test('the report never enumerates passing rules', () => {
   const f = fixture();
-  const r = judge(f, { markets: null });
+  const r = judge(f, { engines: null });
   const text = renderScan(r, f, {});
   assert.match(text, /✅ \d+ pass/);
   const passIds = r.findings.filter((x) => x.status === 'pass').map((x) => x.id);
@@ -62,21 +62,21 @@ test('the report never enumerates passing rules', () => {
 
 test('no score is ever produced', () => {
   const f = fixture();
-  const text = renderScan(judge(f, { markets: null }), f, {});
+  const text = renderScan(judge(f, { engines: null }), f, {});
   assert.doesNotMatch(text, /\/\s?100|score/i);
 });
 
 test('--json emits a stable schema', () => {
   const f = fixture();
-  const j = JSON.parse(renderJson(judge(f, { markets: null }), f));
+  const j = JSON.parse(renderJson(judge(f, { engines: null }), f));
   assert.equal(j.tool, 'spb-seo-geo');
   assert.ok(j.counts && j.findings.length);
-  assert.deepEqual(j.market.markets, ['kr'], 'echoes the fixture market as-is');
+  assert.deepEqual(j.engines.selected, ['naver'], 'echoes the selection as-is');
   assert.ok(j.findings.every((x) => x.evidence.startsWith('http')));
 });
 
 test('under ai-policy=cite-only, allowed training bots are flagged as policy mismatch', () => {
   const f = fixture();
-  const r = judge(f, { markets: null, aiPolicy: 'cite-only' });
+  const r = judge(f, { engines: null, aiPolicy: 'cite-only' });
   assert.equal(r.findings.find((x) => x.id === 'GEO-02').status, 'info');
 });
