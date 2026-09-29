@@ -1,7 +1,8 @@
 // Declarative checker registry.
 // Contract: (facts, args, rule) => { ok: true|false|null, detail?: string }
 //   ok=null means "could not check". It is never promoted to true (invariant 2).
-import { isAllowed, blocksEverything, hasExplicitGroup } from './robots.mjs';
+import { isAllowed, blocksEverything, hasExplicitGroup, contradictoryGroups } from './robots.mjs';
+import { AI_BOTS } from './generate.mjs';
 import { isValidLastmod } from './xml.mjs';
 import { scriptRatios, citationSignals as sig } from './html.mjs';
 import { BOT_FAMILIES } from './accesslog.mjs';
@@ -280,6 +281,15 @@ export const checkers = {
     walk(f.dir);
     if (hits.length) return { ok: false, detail: `found in ${hits[0]}` };
     return { ok: true, detail: 'no such usage' };
+  },
+
+  contradictoryRobotsGroups(f) {
+    const g = needRemote(f); if (g) return g;
+    if (!f.robots?.res?.ok) return UNKNOWN('could not read robots.txt');
+    const watched = [...AI_BOTS.cite, ...AI_BOTS.user, ...AI_BOTS.train, 'Yeti', 'bingbot', 'Googlebot'];
+    const bad = contradictoryGroups(f.robots.parsed, watched);
+    if (bad.length) return { ok: false, detail: `contradictory rules for ${bad.join(', ')} — merged result allows, but the intent is unclear` };
+    return { ok: true };
   },
 
   // Did AI crawlers actually fetch the site? Being allowed proves nothing on its own.

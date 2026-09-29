@@ -45,6 +45,16 @@ try {
     const sitemapUrl = origin ? new URL('/sitemap.xml', origin).toString() : null;
     const content = gen.mergeRobots(existing, gen.robotsBlock({ policy: aiPolicy, sitemapUrl }));
     if (target) plan.push({ path: target, content, mode: existsSync(target) ? 'merge' : 'create', note: `ai-policy=${aiPolicy}` });
+    // Our block cannot override lines the user wrote elsewhere in the file. Say so instead
+    // of letting the fix look complete when it is not.
+    const stale = gen.staleBlocks(existing, [...gen.AI_BOTS.cite, ...gen.AI_BOTS.user]);
+    if (stale.length) {
+      snippets.push({
+        title: 'robots.txt — delete these lines yourself (outside our block)',
+        body: stale.map((x) => `line ${x.line}: ${x.text}   → blocks ${x.ua}, which our block allows`).join('\n')
+          + '\nCompliant crawlers merge the groups and let allow win, but leaving both is ambiguous.',
+      });
+    }
     else snippets.push({ title: 'robots.txt', body: content });
   }
 

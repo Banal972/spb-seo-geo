@@ -714,6 +714,19 @@
       "evidence": "https://developers.google.com/search/docs/appearance/structured-data/organization",
       "grade": "secondary",
       "checked": "2026-09-29"
+    },
+    {
+      "id": "CORE-17",
+      "engine": "core",
+      "severity": "warn",
+      "autofix": false,
+      "check": "contradictoryRobotsGroups",
+      "args": {},
+      "problem": "robots.txt has contradictory duplicate groups for the same crawler",
+      "action": "RFC 9309 says compliant crawlers merge the groups and let allow win, but a non-compliant one may take the first line it sees. Delete the stale rule so the intent is unambiguous — we will not edit lines outside our own block",
+      "evidence": "https://www.rfc-editor.org/rfc/rfc9309.html#section-2.2.1",
+      "grade": "primary",
+      "checked": "2026-09-29"
     }
   ]
 }

@@ -30,20 +30,29 @@ export function parseRobots(text = '') {
   return { groups, sitemaps, raw: text };
 }
 
-// Pick the group that applies to this UA. The most specific (longest) match wins.
-export function groupFor(robots, ua) {
+// RFC 9309 §2.2.1: if more than one group matches the user agent, the matching groups'
+// rules MUST be combined into one group. Reading only the first match is a real bug — it
+// reports a block that compliant crawlers would not honour.
+export function matchingGroups(robots, ua) {
   const target = String(ua).toLowerCase();
-  let best = null, bestLen = -1, star = null;
+  let best = -1, groups = [], star = [];
   for (const g of robots.groups) {
     for (const a of g.agents) {
-      if (a === '*') { if (!star) star = g; continue; }
+      if (a === '*') { star.push(g); continue; }
       if (target === a || target.startsWith(a)) {
-        if (a.length > bestLen) { best = g; bestLen = a.length; }
+        if (a.length > best) { best = a.length; groups = [g]; }
+        else if (a.length === best) groups.push(g);
       }
     }
   }
-  return best || star || null;
+  return groups.length ? groups : star;
 }
+
+// Kept for callers that only need one group's worth of context.
+export const groupFor = (robots, ua) => matchingGroups(robots, ua)[0] || null;
+
+export const rulesFor = (robots, ua) =>
+  matchingGroups(robots, ua).flatMap((g) => g.rules).filter((r) => !r.other);
 
 function toRegex(pattern) {
   let p = pattern;
@@ -53,27 +62,42 @@ function toRegex(pattern) {
   return new RegExp('^' + escaped + (anchorEnd ? '$' : ''));
 }
 
-// Per spec: the longest matching rule wins; on a tie, allow wins.
+// Per spec: rules from all matching groups are merged, the longest match wins, and on a
+// tie allow wins — in either written order.
 export function isAllowed(robots, ua, path = '/') {
-  const g = groupFor(robots, ua);
-  if (!g) return { allowed: true, by: null, group: null };
+  const rules = rulesFor(robots, ua);
+  if (!rules.length) return { allowed: true, by: null };
   let winner = null;
-  for (const r of g.rules) {
-    if (r.other) continue;
+  for (const r of rules) {
     if (r.type === 'disallow' && r.path === '') continue; // an empty Disallow means allow everything
     if (!toRegex(r.path).test(path)) continue;
     const len = r.path.length;
     if (!winner || len > winner.path.length || (len === winner.path.length && r.type === 'allow')) winner = r;
   }
-  if (!winner) return { allowed: true, by: null, group: g };
-  return { allowed: winner.type === 'allow', by: winner, group: g };
+  if (!winner) return { allowed: true, by: null };
+  return { allowed: winner.type === 'allow', by: winner };
+}
+
+// Contradictory duplicate groups are legal but fragile: compliant crawlers merge them and
+// let allow win, non-compliant ones may take the first they see. Worth flagging, not fixing
+// for the user — their lines are theirs (invariant 6).
+export function contradictoryGroups(robots, uas) {
+  const out = [];
+  for (const ua of uas) {
+    const groups = matchingGroups(robots, ua);
+    if (groups.length < 2) continue;
+    const kinds = new Set();
+    for (const g of groups) for (const r of g.rules) if (!r.other && r.path === '/') kinds.add(r.type);
+    if (kinds.size > 1) out.push(ua);
+  }
+  return out;
 }
 
 // Is the whole site blocked? (CORE-02)
 export function blocksEverything(robots, ua = '*') {
-  const g = groupFor(robots, ua);
-  if (!g) return false;
-  return g.rules.some((r) => r.type === 'disallow' && r.path === '/');
+  // "Blocked" means the merged result blocks it, not merely that a Disallow line exists.
+  return rulesFor(robots, ua).some((r) => r.type === 'disallow' && r.path === '/')
+    && !isAllowed(robots, ua, '/').allowed;
 }
 
 export function hasExplicitGroup(robots, ua) {

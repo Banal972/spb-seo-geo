@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseRobots, isAllowed, blocksEverything, groupFor } from '../skill/scripts/lib/robots.mjs';
+import { parseRobots, isAllowed, blocksEverything, groupFor, contradictoryGroups } from '../skill/scripts/lib/robots.mjs';
 
 const txt = `
 User-agent: *
@@ -67,4 +67,26 @@ test('detects a site-wide block', () => {
 test('UA matching is case-insensitive and allows prefix matches', () => {
   const r = parseRobots('User-agent: yeti\nDisallow: /');
   assert.equal(groupFor(r, 'Yeti/1.1')?.rules.length, 1);
+});
+
+test('RFC 9309: duplicate groups for one UA are merged, and allow wins the tie', () => {
+  // The exact shape people end up with after "let me block AI training"
+  const r = parseRobots('User-agent: Claude-SearchBot\nDisallow: /\n\nUser-agent: Claude-SearchBot\nAllow: /\n');
+  assert.equal(isAllowed(r, 'Claude-SearchBot', '/').allowed, true,
+    'reading only the first group would report a block that compliant crawlers ignore');
+});
+
+test('a lone Disallow still blocks', () => {
+  const r = parseRobots('User-agent: Claude-SearchBot\nDisallow: /\n');
+  assert.equal(isAllowed(r, 'Claude-SearchBot', '/').allowed, false);
+});
+
+test('contradictory duplicate groups are reported even though the merge allows', () => {
+  const r = parseRobots('User-agent: GPTBot\nDisallow: /\n\nUser-agent: GPTBot\nAllow: /\nUser-agent: Yeti\nAllow: /\n');
+  assert.deepEqual(contradictoryGroups(r, ['GPTBot', 'Yeti']), ['GPTBot']);
+});
+
+test('blocksEverything reflects the merged result, not a stray Disallow line', () => {
+  assert.equal(blocksEverything(parseRobots('User-agent: *\nDisallow: /\n\nUser-agent: *\nAllow: /\n')), false);
+  assert.equal(blocksEverything(parseRobots('User-agent: *\nDisallow: /\n')), true);
 });

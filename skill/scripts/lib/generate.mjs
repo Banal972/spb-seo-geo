@@ -66,6 +66,31 @@ export function rssXml({ origin, title, description, items }) {
   ].join('\n');
 }
 
+// Lines outside our markers that contradict what our block allows. We report them; we do
+// not delete them — the user's lines are theirs (invariant 6).
+export function staleBlocks(existing = '', uas) {
+  const lines = existing.split(/\r?\n/);
+  const start = lines.findIndex((l) => l.includes(MARK_START));
+  const end = lines.findIndex((l) => l.includes(MARK_END));
+  const out = [];
+  let current = [];
+  lines.forEach((raw, i) => {
+    if (start > -1 && i >= start && i <= end) return;
+    const line = raw.replace(/#.*$/, '').trim();
+    const ua = /^user-agent\s*:\s*(.+)$/i.exec(line);
+    if (ua) { current.push(ua[1].trim()); return; }
+    const dis = /^disallow\s*:\s*(\S*)$/i.exec(line);
+    if (dis && dis[1] === '/') {
+      for (const a of current) {
+        const hit = uas.find((u) => u.toLowerCase() === a.toLowerCase());
+        if (hit) out.push({ ua: hit, line: i + 1, text: raw.trim() });
+      }
+    }
+    if (line && !dis) current = [];
+  });
+  return out;
+}
+
 export const indexNowKey = () => randomBytes(16).toString('hex');
 export const indexNowKeyFile = (key) => key + '\n';
 
