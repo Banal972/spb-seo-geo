@@ -4,6 +4,10 @@ import { loadCatalog, partitionByRequirements, REQUIREMENTS } from '../skill/scr
 import { judge } from '../skill/scripts/lib/judge.mjs';
 import { parseHtml } from '../skill/scripts/lib/html.mjs';
 import { parseRobots } from '../skill/scripts/lib/robots.mjs';
+import { run } from '../skill/scripts/lib/run.mjs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const { rules } = loadCatalog();
 const page = (html) => ({ res: { ok: true, status: 200, headers: {}, redirects: [], bytes: 100, contentType: 'text/html' }, url: 'https://a.kr/', parsed: Object.assign(parseHtml(html), { url: 'https://a.kr/' }) });
@@ -70,4 +74,38 @@ test('console-registration advice is conditional, not an order', () => {
 
 test('every requirement key is implemented', () => {
   for (const r of rules) if (r.requires) assert.ok(REQUIREMENTS[r.requires], `${r.id}: ${r.requires}`);
+});
+
+// A two-app monorepo used to be audited from the root: the live pages of one site were
+// judged against the local files of neither. It reported a missing IndexNow key that was
+// sitting in apps/reviewer all along — a false warning that looked exactly like a real one.
+test('a repo with several sites refuses to guess which one', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'spb-mono-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ workspaces: ['apps/*'] }));
+  for (const name of ['reviewer', 'advertiser']) {
+    const app = join(dir, 'apps', name);
+    mkdirSync(join(app, 'public'), { recursive: true });
+    writeFileSync(join(app, 'package.json'), JSON.stringify({ dependencies: { next: '15.0.0' } }));
+  }
+  await assert.rejects(() => run({ dir }), (e) => {
+    assert.equal(e.code, 'AMBIGUOUS_APP');
+    assert.equal(e.apps.length, 2);
+    assert.match(e.userMessage, /--app apps\/reviewer/);
+    return true;
+  });
+});
+
+test('naming the app lets the same repo through', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'spb-mono-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ workspaces: ['apps/*'] }));
+  for (const name of ['reviewer', 'advertiser']) {
+    const app = join(dir, 'apps', name);
+    mkdirSync(join(app, 'public'), { recursive: true });
+    writeFileSync(join(app, 'package.json'), JSON.stringify({ dependencies: { next: '15.0.0' } }));
+  }
+  const { facts } = await run({ dir, app: 'apps/reviewer' });
+  assert.equal(facts.app, 'apps/reviewer');
+  assert.equal(facts.framework, 'Next.js');
 });

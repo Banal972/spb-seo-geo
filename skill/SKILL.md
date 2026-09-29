@@ -9,9 +9,9 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 
 ## Never do this
 
-- Do **not** fetch or read the site's HTML, robots.txt or sitemap yourself. The script already judged them.
+- Do **not** read the site's HTML, robots.txt or sitemap — in the repo or over the network. The script already judged them. Do not read these scripts either: run them.
 - Do not web-search for SEO advice. Every rule carries its evidence URL.
-- Do not invent a score. Report counts and severities.
+- Do not invent a score, and do not invent a recommendation. When a choice has options, give the tradeoff and stop — never mark one "recommended" or claim what most people pick. `--ai-policy` defaults to `open`; list it first.
 - Do not enumerate passing rules. Say `✅ N pass` in one line.
 - Never pass `--write` without the user's approval.
 - **Assume they do not know SEO.** Never use a term without saying what it is, never make them go look something up, and never ask a question whose answer requires knowing the answer. "Skip if unsure" is always an acceptable reply.
@@ -25,15 +25,14 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 node <DIR>/scripts/scan.mjs
 ```
 
-That is the whole first step. It finds the site URL in the project (framework config,
-`package.json` `homepage`, `public/CNAME`, `.env*`, an existing sitemap or robots.txt) and
-audits the live site against 45 rules. Ask for the URL only if it was not found, and only
-pick between sites if this is a monorepo holding several — `intake.mjs` lists them.
+The whole first step. It digs the site URL out of the project and audits the live site
+against 45 rules. Ask for the URL only if it says it found none, and pick between sites
+only in a monorepo holding several — `intake.mjs` lists them; **choose nothing yourself,
+and run nothing else until they answer.**
 
-Whatever the user typed after `/spbseo` goes straight on the end — `seo`, `geo` and a bare
-address are all understood, and an unrecognised word says so rather than being ignored.
+Whatever the user typed after `/spbseo` goes on the end: `seo`, `geo` or a bare address.
 
-Report the failures in plain language, then offer to fix the ones marked autofixable.
+Report the failures in plain language, then offer to fix the autofixable ones.
 
 ## Then fix, asking only what a fix needs
 
@@ -44,18 +43,17 @@ node <DIR>/scripts/todo.mjs             what only a human can do, with links
 node <DIR>/scripts/submit.mjs [--since HEAD~1]
 ```
 
-**Do not interview them up front.** Each of these is asked only when it is the thing
-standing between them and a fix, and "skip" is always a fine answer:
+**Do not interview them up front.** Ask one of these only when it is the thing standing
+between them and a fix; "skip" is always a fine answer:
 
 | Ask, when it comes up | Because |
 | --- | --- |
-| the "HTML tag" string from a console | otherwise the ownership tag becomes a to-do instead of being placed |
-| may AI companies learn from your content? | `apply` writes robots.txt as allow-everything by default; `--ai-policy=cite-only` blocks training but keeps you quotable, and Google ranking is identical either way |
+| the "HTML tag" string from a console | otherwise the ownership tag is a to-do instead of being placed |
+| may AI companies learn from your content? | robots.txt is written allow-everything unless they say otherwise; ranking is identical either way |
 | does this site publish posts regularly? | if so `--with-rss` is worth it, mainly for Naver |
-| is there a server log file? | `--access-log` turns GEO from "allowed" into measured. Most people do not have one |
+| is there a server log file? | `--access-log` turns GEO from "allowed" into measured. Most do not have one |
 
-Answers are saved to `.spb-seo-geo.json`, so nothing is asked twice. `intake.mjs` prints
-what is still unanswered if you want to offer more.
+Answers are saved, so nothing is asked twice. `intake.mjs` prints what is unanswered.
 
 ## Language
 

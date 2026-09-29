@@ -213,6 +213,7 @@ try {
   out(L.join('\n'));
   process.exit(EXIT.OK);
 } catch (e) {
+  if (e?.code === 'AMBIGUOUS_APP') { out(e.userMessage); process.exit(EXIT.ERROR); }
   log('execution error:', String(e?.stack || e));
   process.exit(EXIT.ERROR);
 }

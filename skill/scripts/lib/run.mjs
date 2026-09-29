@@ -16,6 +16,24 @@ export async function run(args) {
   const app = args.app ? String(args.app) : config.app || null;
   const root = app ? join(repoRoot, app) : repoRoot;
   const fw = detectFramework(root);
+  // Several sites under one repo: auditing the root mixes one site's live pages with
+  // another's local files, which reads as a real finding. Observed on a two-app monorepo:
+  // the IndexNow key sat in apps/reviewer, the root had none, and the report warned that
+  // a key the user had already shipped was missing. Ask instead of averaging.
+  if (!app && Array.isArray(fw.apps) && fw.apps.length > 1) {
+    const err = new Error('several sites in this repo');
+    err.code = 'AMBIGUOUS_APP';
+    err.apps = fw.apps;
+    err.userMessage = [
+      'This repo holds more than one site, so there is nothing to audit until you pick one:',
+      '',
+      ...fw.apps.map((a) => `  --app ${a.rel}${a.name ? `   (${a.name})` : ''}`),
+      '',
+      'Ask the user which one. Auditing the repo root would mix their files and report',
+      'findings that belong to neither.',
+    ].join('\n');
+    throw err;
+  }
   // Anything inferable must not be a question.
   let url = args.url ? String(args.url) : config.url || null;
   let urlFrom = args.url ? '--url' : (config.url ? 'saved config' : null);

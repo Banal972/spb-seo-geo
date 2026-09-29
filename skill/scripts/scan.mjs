@@ -33,6 +33,7 @@ try {
   out(args.json ? renderJson(result, facts) : renderScan(result, facts, { verbose: !!args.verbose }));
   process.exit(exitWith(result.counts));
 } catch (e) {
+  if (e?.code === 'AMBIGUOUS_APP') { out(e.userMessage); process.exit(EXIT.ERROR); }
   log('execution error:', String(e?.stack || e));
   out('The audit did not complete. See the error above.');
   process.exit(EXIT.ERROR);

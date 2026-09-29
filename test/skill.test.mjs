@@ -28,7 +28,20 @@ test('every referenced file exists', () => {
 });
 
 test('the skill forbids the things that would blow the budget', () => {
-  for (const rule of [/fetch or read the site/i, /web-search for SEO/i, /enumerate passing rules/i]) {
+  for (const rule of [/read the site's HTML/i, /web-search for SEO/i, /enumerate passing rules/i]) {
     assert.match(md, rule);
   }
+});
+
+// A model with no evidence will happily supply its own. Antigravity presented cite-only
+// as "recommended, what most people pick" — neither claim exists anywhere in this repo.
+test('the skill forbids inventing a recommendation', () => {
+  assert.match(md, /do not invent a recommendation/i);
+  assert.match(md, /what most people pick/i);
+});
+
+// Scripts are executed, never read. Reading apply.mjs into context costs more than the
+// audit it would have run.
+test('the skill forbids reading its own scripts', () => {
+  assert.match(md, /Do not read these scripts/i);
 });
