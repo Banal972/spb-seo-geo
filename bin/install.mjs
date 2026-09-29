@@ -13,6 +13,7 @@ const SRC_SKILL = join(HERE, '..', 'skill');
 const SRC_TPL = join(HERE, '..', 'templates', 'commands');
 const NAME = 'spbseo';
 const HOME = homedir();
+const CODEX_HOME = process.env.CODEX_HOME || join(HOME, '.codex');
 const CWD = process.cwd();
 
 const AGENTS = [
@@ -22,13 +23,18 @@ const AGENTS = [
     skill: (s) => (s === 'global' ? join(HOME, '.claude', 'skills', NAME) : join(CWD, '.claude', 'skills', NAME)),
     command: null,  // the skill name itself becomes /spbseo
     hint: 'the skill name is the command — no command file needed',
+    invoke: '/spbseo   (restart Claude Code once so it picks the skill up)',
   },
   {
     key: 'codex', label: 'Codex CLI',
     detect: () => existsSync(join(HOME, '.codex')),
-    skill: (s) => (s === 'global' ? join(HOME, '.agents', 'skills', NAME) : join(CWD, '.agents', 'skills', NAME)),
-    command: () => join(HOME, '.codex', 'prompts', `${NAME}.md`),
-    template: 'codex.md',
+    // Codex reads .agents/skills in the project and $CODEX_HOME/skills globally. It used to
+    // take a command file in ~/.codex/prompts; that directory is gone as of 0.159, and
+    // Codex has no per-skill slash command at all — the model picks a skill by description.
+    skill: (s) => (s === 'global' ? join(CODEX_HOME, 'skills', NAME) : join(CWD, '.agents', 'skills', NAME)),
+    command: null,
+    hint: 'discovered from .agents/skills — Codex has no per-skill slash command',
+    invoke: 'ask for it in plain words ("check this site\'s SEO") · /skills lists it',
   },
   {
     key: 'gemini', label: 'Gemini CLI',
@@ -43,6 +49,7 @@ const AGENTS = [
     skill: (s) => (s === 'global' ? join(HOME, '.agents', 'skills', NAME) : join(CWD, '.agents', 'skills', NAME)),
     command: () => join(CWD, '.agent', 'workflows', `${NAME}.md`),
     template: 'antigravity.md',
+    invoke: '/spbseo',
   },
   {
     key: 'shared', label: 'Shared (.agents/skills — Cursor, Kimi Code, Cline, Warp, Zed …)',
@@ -50,6 +57,7 @@ const AGENTS = [
     skill: (s) => (s === 'global' ? join(HOME, '.agents', 'skills', NAME) : join(CWD, '.agents', 'skills', NAME)),
     command: null,
     hint: 'several harnesses read this path',
+    invoke: 'however that harness invokes skills',
   },
 ];
 
@@ -155,8 +163,9 @@ for (const a of chosen) {
 
 console.log('');
 for (const [p, note] of made) console.log(`✅ ${short(p)}${' '.repeat(Math.max(1, 44 - short(p).length))}${note}`);
+const runLines = chosen.map((a) => `${a.label}:`.padEnd(15) + (a.invoke || '/spbseo'));
 console.log(`
-   run:     /spbseo
+   run:     ${runLines.join('\n            ')}
    update:  npx spb-seo-geo@latest
    scope:   ${scope === 'global' ? 'global' : 'this project'} · nothing was written for harnesses you did not pick`);
 

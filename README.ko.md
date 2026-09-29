@@ -44,13 +44,15 @@ npx spb-seo-geo --list-agents
 - 여러 하네스를 고르면 실체는 `.agents/skills/spbseo` 한 벌이고 나머지는 심볼릭 링크입니다.
 - 설치가 끝나면 **npx·네트워크가 필요하지 않습니다.**
 
-| 하네스 | `/spbseo` |
+| 하네스 | 부르는 법 |
 | --- | --- |
-| Claude Code | 스킬 이름이 곧 명령 (파일 불필요) |
-| Codex CLI | `~/.codex/prompts/spbseo.md` |
-| Gemini CLI | `.gemini/commands/spbseo.toml` |
-| Antigravity | `.agent/workflows/spbseo.md` |
+| Claude Code | `/spbseo` — 스킬 이름이 곧 명령. 설치 후 한 번 재시작 |
+| Codex CLI | **슬래시 커맨드가 없습니다.** `.agents/skills/`(프로젝트)·`$CODEX_HOME/skills`(전역)에서 스킬을 찾아 **설명을 보고 직접 고릅니다** — 그냥 "이 사이트 SEO 점검해줘" 라고 하면 됩니다. `/skills` 로 인식된 목록 확인 |
+| Gemini CLI | `.gemini/commands/spbseo.toml` 로 `/spbseo` |
+| Antigravity | `.agent/workflows/spbseo.md` 로 `/spbseo` |
 | Cursor · Kimi Code · Cline · Warp · Zed 등 | `.agents/skills/` 를 읽습니다 |
+
+Codex 0.159 이전에는 `~/.codex/prompts/` 커맨드 파일을 썼습니다. 그 디렉터리는 없어졌고, 이제 아무것도 쓰지 않습니다.
 
 ## 명령
 

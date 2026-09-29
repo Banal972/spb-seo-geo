@@ -49,13 +49,16 @@ npx spb-seo-geo --list-agents
 - Choose several harnesses and there is still exactly **one real copy** at `.agents/skills/spbseo`; the rest are symlinks.
 - Once installed, **npx and the network are no longer needed**.
 
-| Harness | How `/spbseo` arrives |
+| Harness | How you invoke it |
 | --- | --- |
-| Claude Code | the skill name *is* the command (no file needed) |
-| Codex CLI | `~/.codex/prompts/spbseo.md` |
-| Gemini CLI | `.gemini/commands/spbseo.toml` |
-| Antigravity | `.agent/workflows/spbseo.md` |
+| Claude Code | `/spbseo` — the skill name *is* the command. Restart it once after installing |
+| Codex CLI | **no slash command.** Codex discovers skills from `.agents/skills/` (project) and `$CODEX_HOME/skills` (global), then picks one by its description — just ask: *"check this site's SEO"*. `/skills` lists what it found |
+| Gemini CLI | `/spbseo` via `.gemini/commands/spbseo.toml` |
+| Antigravity | `/spbseo` via `.agent/workflows/spbseo.md` |
 | Cursor · Kimi Code · Cline · Warp · Zed … | they read `.agents/skills/` |
+
+Codex before 0.159 took a command file in `~/.codex/prompts/`; that directory no longer
+exists and nothing is written there.
 
 ## Commands
 
