@@ -26,7 +26,34 @@ const tokens = cfg.tokens || {};
 const haveTokens = ['google', 'bing', 'naver'].filter((k) => tokens[k]);
 
 const steps = [];
-const ask = (n, label, state, question, flag) => steps.push({ n, label, state, question, flag });
+// A question without its consequences is not a real question. Each choice carries the
+// tradeoff, so the agent presents it instead of improvising or asking the user to guess.
+const ask = (n, label, state, question, flag, explain) => steps.push({ n, label, state, question, flag, explain });
+
+const EXPLAIN = {
+  policy: [
+    'open      — training allowed. Bet: a model may absorb the brand and mention it without searching (grade: low, unverified). Cost: your content becomes training data and can be paraphrased without a link.',
+    'cite-only — training blocked, citation kept. You still appear as a source with a link. Costs you the bet above, and blocking Google-Extended may drop Gemini-app grounding.',
+    'closed    — both blocked. You disappear from AI answers. Only pick this if that is the goal.',
+    'Search ranking is identical in all three — Google states Google-Extended is training only.',
+  ],
+  tokens: [
+    'With a token we place the ownership tag for you (or emit the exact snippet for your framework). Without it, you get a "go fetch it" item instead.',
+    'Skip any console you have not signed up for. Already verified by DNS or by an uploaded file? Say so — a committed verification file is detected automatically.',
+  ],
+  log: [
+    'This is the only way to know whether AI crawlers actually fetch the site. Being allowed in robots.txt proves nothing.',
+    'It reports which citation bots came and when, and whether a real person opened your link inside ChatGPT or Claude — the strongest evidence AI answers send traffic.',
+  ],
+  extras: [
+    'RSS      — Naver still treats it as a first-class input, so worth it if you publish regularly. Our feed is static, so it goes stale unless your build regenerates it. Pointless for a landing page.',
+    'llms.txt — helps coding agents read your docs (Anthropic and OpenAI use it that way). No search or AI-visibility effect: Google says it is unnecessary, and 97% of llms.txt files measured had zero traffic. Worth it for a docs site, not for marketing.',
+  ],
+  engines: {
+    naver: ['Korea\'s dominant engine plus its AI Briefing surface. Costs four console steps in a fixed order, and indexing takes a couple of weeks.'],
+    yahoo: ['Nothing to register — Yahoo! JAPAN runs on Google\'s index, so your Google work already covers it. Choosing it just gets you that explanation.'],
+  },
+};
 
 // 0 — a monorepo usually holds several sites, each with its own domain. Never pick one
 // silently: the wrong choice makes every later answer wrong too.
@@ -58,39 +85,44 @@ for (const e of OPTIONAL_ENGINES) {
   ask(steps.length + 1, LABEL[e],
     decided ? (chosen ? 'yes (saved)' : 'no (saved)') : 'not asked',
     decided ? null : `Do you want to cover ${LABEL[e]}?`,
-    `--engines ${e}`);
+    `--engines ${e}`, EXPLAIN.engines[e]);
 }
 
 // 4 — a value judgement, so it is always the user's call.
 ask(4, 'AI training policy', cfg.aiPolicy ? `${cfg.aiPolicy} (saved)` : 'not asked',
-  cfg.aiPolicy ? null : 'Allow AI companies to train on this site? open (allow, max visibility) / cite-only (block training, stay citable in AI answers) / closed (block both — you disappear from AI answers)',
-  '--ai-policy open|cite-only|closed');
+  cfg.aiPolicy ? null : 'Allow AI companies to train on this site? open / cite-only / closed',
+  '--ai-policy open|cite-only|closed', EXPLAIN.policy);
 
 // 5 — the one thing that turns apply from advice into action.
 ask(5, 'verification tokens', haveTokens.length ? `${haveTokens.join(', ')} (saved)` : 'none',
   haveTokens.length === 3 ? null : `Do you have verification tokens for ${['google', 'bing', 'naver'].filter((k) => !tokens[k]).join(', ')}? (the "HTML tag" string in each console — skip any you have not signed up for)`,
-  '--google-token X --bing-token X --naver-token X');
+  '--google-token X --bing-token X --naver-token X', EXPLAIN.tokens);
 
 // 6 — without it, GEO is theory.
 ask(6, 'access log', cfg.accessLog ? `${cfg.accessLog} (saved)` : (detectedLog ? `${detectedLog} — found in the repo` : 'none'),
   cfg.accessLog ? null : (detectedLog ? `Use ${detectedLog} to measure AI crawler activity?` : 'Is there a server access log anywhere? It is the only way to measure whether AI crawlers actually fetch the site.'),
-  '--access-log <file>');
+  '--access-log <file>', EXPLAIN.log);
 
 // 7 — optional artefacts, so ask rather than generate.
 const extras = [cfg.withRss && 'rss', cfg.withLlmsTxt && 'llms.txt'].filter(Boolean);
 ask(7, 'optional files', extras.length ? extras.join(', ') : 'none',
   (cfg.withRss || cfg.withLlmsTxt) ? null : 'Generate an RSS feed (Naver still uses it) and/or llms.txt (Google says it is unnecessary)?',
-  '--with-rss --with-llms-txt');
+  '--with-rss --with-llms-txt', EXPLAIN.extras);
 
 const pending = steps.filter((s) => s.question);
 const L = [`Intake — ${pending.length ? `${pending.length} still to ask` : 'complete'}   (${cfg._exists ? cfg._path.replace(root + '/', '') : 'no config yet'})`, ''];
 for (const s of steps) {
   L.push(`  ${s.question ? '?' : '✔'} ${String(s.label).padEnd(22)} ${s.state}`);
-  if (s.question) L.push(`     ask: ${s.question}`);
+  if (s.question) {
+    L.push(`     ask: ${s.question}`);
+    for (const line of s.explain || []) L.push(`          ${line}`);
+  }
 }
 L.push('');
 if (pending.length) {
   L.push('Ask ONE question at a time, in the order above, and wait for each answer.');
+  L.push('Give the tradeoff with the question — a choice without its cost is not a choice.');
+  L.push('If they dig further, references/choices.md has the evidence behind each one.');
   L.push('Skip anything the user does not have. Then save every answer in a single call:');
   L.push('');
   const parts = [];

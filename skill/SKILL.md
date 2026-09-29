@@ -24,9 +24,9 @@ The scripts bundled with this skill make the verdict. **You gather a few answers
 node <DIR>/scripts/intake.mjs
 ```
 
-This prints what is already known and what is still unanswered, in order. **Ask the user those questions one at a time and wait for each answer** — do not dump them all at once, and do not answer them yourself.
+It prints what is known, what is still unanswered, and **the tradeoff for each choice**. Ask one at a time and wait — never dump them as a form, never answer them yourself, and **always give the cost with the option**. A choice without its consequences is not a choice; `references/choices.md` has the evidence if they dig.
 
-The order matters: **which site** (a monorepo often holds several — never pick one yourself), then the address, then Naver, then Yahoo, then the AI training policy, then verification tokens, then an access log, then optional files. Anything already saved in `.spb-seo-geo.json` is skipped, so this is a first-run conversation, not a recurring one.
+Order: **which site** (a monorepo often holds several — never pick one yourself), address, Naver, Yahoo, AI training policy, verification tokens, access log, optional files. Anything already in `.spb-seo-geo.json` is skipped — this is a first-run conversation, not a recurring one.
 
 The site URL is usually already in the project, so that question is a confirmation rather than an open one. Save every answer in one `setup` call (intake prints the exact command) and show the file preview before writing anything.
 
@@ -43,11 +43,7 @@ node <DIR>/scripts/submit.mjs [--since HEAD~1]
 
 ## Order of work
 
-1. **`intake`** → ask one at a time → **`setup`** (no `--write`): shows the audit and the file preview.
-2. On approval, **`setup --write`** — or `apply --write` on later runs.
-3. Relay **`todo`** as given: required steps first, optional engines after.
-4. After they deploy, **`scan`** again against the live site.
-5. On new pages, **`submit`**. Google does not participate in IndexNow — never claim otherwise.
+**`intake`** → ask one at a time → **`setup`** (no `--write`, shows audit + file preview) → on approval **`setup --write`** → relay **`todo`** as given → after they deploy, **`scan`** again → on new pages, **`submit`** (Google does not participate in IndexNow — never claim otherwise).
 
 ## Language
 
@@ -55,15 +51,14 @@ node <DIR>/scripts/submit.mjs [--since HEAD~1]
 
 ## Reading the report
 
-| Symbol | Relay it as |
+| | Relay it as |
 | --- | --- |
 | `✅` pass | count only |
-| `⚠️` warning | count, detail on request |
-| `·` note | count only — weaker evidence or optional |
-| `❌` critical | **always explain.** Something is blocking visibility |
-| `?` unchecked | **not a pass.** Say why it could not be checked |
-| `⏭` hidden | one line; never drop it silently |
-| `n/a` | does not apply (no access log, not an article site). **Not a defect** |
+| `⚠️` warn | count, detail on request |
+| `·` note | count only — weak evidence or optional |
+| `❌` critical | **always explain.** Visibility is blocked |
+| `?` unchecked | **not a pass.** Say why |
+| `⏭` hidden · `n/a` | one line each; `n/a` is **not a defect** |
 | `✔` | the user already said it was done |
 
 `[evidence: primary]` = official engine docs · `secondary` = research/measurement · `low` = correlation only. **Relay the grade as given.**
@@ -78,12 +73,12 @@ Nothing is gated — allowing a crawler is free, so every rule runs regardless. 
 
 ## Read only when you need detail
 
-`<DIR>/references/` — `google.md` · `naver.md` · `bing.md` · `yahoo.md` · `geo.md`
+`<DIR>/references/` — `choices.md` (what each decision costs) · `google.md` · `naver.md` · `bing.md` · `yahoo.md` · `geo.md`
 
 ## Two things the audit already handles for you
 
-- **If a plugin generates `robots.txt`** (`next-sitemap` and friends), `apply` prints the snippet for *that tool's config* instead of writing a file the next build would overwrite. Relay the snippet as the fix.
-- **Something already in the repo but not deployed** reads as "exists locally, deploy it", not as missing. Never tell someone to create what they already created.
+- **If a plugin generates `robots.txt`** (`next-sitemap` and friends), `apply` prints the snippet for *that tool's config* rather than writing a file the next build overwrites. Relay the snippet.
+- **Already in the repo but not deployed** reads "exists locally, deploy it", not missing. Never tell someone to create what they already created.
 
 ## GEO is measured, not assumed
 
