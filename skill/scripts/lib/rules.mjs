@@ -4,6 +4,29 @@
 // and surfaces in todo as optional — never as a failure (invariant 7).
 // Some people only care about classic search, some only about being cited by AI.
 // Filtering is honest as long as what was left out is stated (invariant 7).
+// A rule that cannot apply should not be evaluated at all. Reporting "could not check"
+// for a measurement nobody asked for, or a date on a landing page, is just noise.
+export const REQUIREMENTS = {
+  accessLog: {
+    met: (f) => !!f.accessLog?.ok,
+    why: 'needs an access log — pass --access-log <file> to measure AI crawler activity',
+  },
+  articlePages: {
+    met: (f) => [f.home, ...(f.samples || [])].some((p) => p?.parsed?.isArticle),
+    why: 'no article-like pages on this site, so publication dates and prose structure do not apply',
+  },
+};
+
+export function partitionByRequirements(rules, facts) {
+  const active = [], notApplicable = [];
+  for (const r of rules) {
+    const req = r.requires && REQUIREMENTS[r.requires];
+    if (req && !req.met(facts)) notApplicable.push({ id: r.id, requires: r.requires, why: req.why });
+    else active.push(r);
+  }
+  return { active, notApplicable };
+}
+
 export function partitionByScope(rules, only = null) {
   if (!only || only === 'all') return { active: rules, skipped: [] };
   const active = [], skipped = [];
@@ -46,6 +69,7 @@ export function lintRule(r) {
   if (!r.problem || !r.action) errs.push('missing problem/action');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(r.checked || '')) errs.push('missing checked date');
   if (r.autofix && !r.fix) errs.push('autofix=true but no fix generator specified');
+  if (r.requires && !REQUIREMENTS[r.requires]) errs.push(`unknown requires: ${r.requires}`);
   if (!Array.isArray(r.scope) || !r.scope.length || r.scope.some((x) => !SCOPES.has(x))) errs.push(`scope must be a non-empty subset of seo/geo, got ${JSON.stringify(r.scope)}`);
   return errs;
 }

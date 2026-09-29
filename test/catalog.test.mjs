@@ -10,10 +10,10 @@ test('no rule is rejected by the linter', () => {
 });
 
 test('rule count and composition', () => {
-  assert.equal(rules.length, 45);
+  assert.equal(rules.length, 44);
   const by = {};
   for (const r of rules) by[r.engine] = (by[r.engine] || 0) + 1;
-  assert.deepEqual(by, { core: 17, google: 7, naver: 4, bing: 3, ai: 13, yahoo: 1 });
+  assert.deepEqual(by, { core: 17, google: 7, naver: 4, bing: 3, ai: 12, yahoo: 1 });
 });
 
 test('every rule carries an evidence URL and a grade', () => {

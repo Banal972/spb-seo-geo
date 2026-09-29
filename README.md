@@ -69,22 +69,22 @@ You normally reach these through `/spbseo` rather than typing them. `setup` save
 - `apply` **previews by default.** Nothing changes without `--write`; existing files are backed up to `.bak`, and only the region inside the `# >>> spb-seo-geo` markers is touched.
 - `submit` notifies **Bing, Naver, Yandex and Seznam** over IndexNow. Google does not participate, so it never claims otherwise.
 
-## What gets checked (45 rules)
+## What gets checked (44 rules)
 
 | Group | Count | Covers |
 | --- | --- | --- |
 | CORE | 17 | robots.txt · sitemap · canonical · title/description · server-rendered body text · `lang` accuracy · Open Graph · IndexNow key |
 | GOOGLE | 7 | ownership · `noindex` · **`nosnippet`** · `Google-Extended` · JSON-LD · Indexing API misuse |
 | BING | 3 | ownership · bingbot · registration (with the GSC-import shortcut) |
-| GEO | 13 | **citation bots allowed** · training policy · user-triggered bots · **actual crawler fetches from your access log** · policy violations · text form · internal links · headings · dates · entity markup · citation signals |
+| GEO | 12 | **citation bots allowed** · training policy · user-triggered bots · **actual crawler fetches from your access log** · policy violations · text form · internal links · headings · dates · entity markup · citation signals |
 | NAVER | 4 | **Yeti blocking** (checked for everyone) · ownership · RSS · console registration — the last three are optional advice, never failures |
 
 You are asked only whether to add **Naver** and **Yahoo**, by name. Google and Bing are never optional.
 | YAHOO | 1 | Yahoo! JAPAN's own `Y!J-*` crawlers (checked for everyone — allowing them is free) |
 
-Every rule carries a `scope`, so `--only seo` (30 rules) and `--only geo` (25) are real splits rather than guesses — infrastructure that gates both (robots, sitemap, indexability, server-rendered text) appears in both.
+Every rule carries a `scope`, so `--only seo` (30 rules) and `--only geo` (24) are real splits rather than guesses — infrastructure that gates both (robots, sitemap, indexability, server-rendered text) appears in both.
 
-42 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Naver, reported as notes and routed to `todo`.
+41 of them are verdicts that apply to any site. The 3 remaining are optional console steps for Naver, reported as notes and routed to `todo`.
 
 ### GEO is measured, not assumed
 
@@ -131,6 +131,14 @@ Design notes and the decision log (D1–D15) live in `PLAN.md` and in the compan
 Code, rules, reports and `SKILL.md` are English. That does **not** mean you get English answers: agents reply in the language you write in, and `SKILL.md` instructs them to translate findings rather than paste report lines verbatim. English output is only what you see if you run the scripts directly in a terminal.
 
 This README is also available in [한국어](./README.ko.md).
+
+## What it refuses to nag you about
+
+A finding you cannot act on is noise, so:
+
+- **Rules that cannot apply are not run.** Publication dates and prose structure are only checked on pages that actually look like articles; AI-crawler measurement only runs when you give it a log. These show as `n/a` with the reason — not as "unchecked".
+- **Console registration is phrased as a question, not an order**, because there is no way to see from outside whether you already did it. Tell it once with `--done GOOGLE-07` and it never asks again.
+- **Images are not counted against you.** An earlier rule compared text length to image count, which punished landing pages for being landing pages. The real check — is there body text at all — is `CORE-12`.
 
 ## Not yet verified
 

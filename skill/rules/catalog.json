@@ -1,7 +1,7 @@
 {
   "version": "0.1.0",
   "updated": "2026-09-29",
-  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification. Every rule is evaluated for every site: allowing a crawler is free regardless of which engines you target. Work that depends on registering with an optional engine's console carries `region` (the engine key), is reported as info, and is routed to todo — never as a failure. Each rule carries `scope`: seo, geo, or both. Infrastructure that gates either one (robots, sitemap, indexability, server-rendered text) is both; appearance-in-search details are seo; citation and AI-crawler concerns are geo.",
+  "notes": "Rule of rules: a rule without evidence/grade is never loaded. grade=low can never be critical. If checked is older than 180 days the report flags it for re-verification. Every rule is evaluated for every site: allowing a crawler is free regardless of which engines you target. Work that depends on registering with an optional engine's console carries `region` (the engine key), is reported as info, and is routed to todo — never as a failure. Each rule carries `scope`: seo, geo, or both. Infrastructure that gates either one (robots, sitemap, indexability, server-rendered text) is both; appearance-in-search details are seo; citation and AI-crawler concerns are geo. A rule may declare `requires`: accessLog (only evaluated when a log is given) or articlePages (only when the site actually has article-like pages). Rules that do not apply are counted separately and summarised in one line — they never pile up as unchecked items.",
   "rules": [
     {
       "id": "CORE-01",
@@ -413,8 +413,8 @@
           }
         ]
       },
-      "problem": "Search Console registration and sitemap submission cannot be checked from outside",
-      "action": "Check it in the console yourself",
+      "problem": "Search Console registration cannot be verified from outside",
+      "action": "If you have not registered yet: add the property and submit the sitemap. Already done? Silence this with --done GOOGLE-07",
       "evidence": "https://support.google.com/webmasters/answer/9008080",
       "grade": "primary",
       "checked": "2026-09-29",
@@ -509,12 +509,12 @@
             "label": "Submit the sitemap",
             "url": "https://searchadvisor.naver.com",
             "minutes": 2,
-            "note": "indexing takes about two weeks; not appearing during that window is normal"
+            "note": "Request > sitemap submission"
           }
         ]
       },
       "problem": "Naver Search Advisor registration cannot be verified from outside",
-      "action": "There is no public API. Do it in the console in order: ownership, RSS, sitemap",
+      "action": "If not registered yet: there is no public API, so do it in the console — ownership, then RSS, then sitemap. Already done? --done NAVER-04",
       "evidence": "https://searchadvisor.naver.com/guide",
       "grade": "secondary",
       "checked": "2026-09-29",
@@ -585,8 +585,8 @@
           }
         ]
       },
-      "problem": "Bing Webmaster registration cannot be checked from outside",
-      "action": "Importing from Search Console is the fastest route",
+      "problem": "Bing Webmaster registration cannot be verified from outside",
+      "action": "If not registered yet: importing from Google Search Console takes about a minute. Already done? --done BING-03",
       "evidence": "https://www.bing.com/webmasters",
       "grade": "secondary",
       "checked": "2026-09-29",
@@ -668,24 +668,6 @@
       ]
     },
     {
-      "id": "GEO-04",
-      "engine": "ai",
-      "severity": "warn",
-      "autofix": false,
-      "check": "textNotBuriedInImages",
-      "args": {
-        "minTextPerImage": 80
-      },
-      "problem": "body content is buried in images (too little text per image)",
-      "action": "Provide the substance as text. Google's AI features guidance recommends keeping content in textual form",
-      "evidence": "https://developers.google.com/search/docs/appearance/ai-features",
-      "grade": "primary",
-      "checked": "2026-09-29",
-      "scope": [
-        "geo"
-      ]
-    },
-    {
       "id": "GEO-05",
       "engine": "ai",
       "severity": "warn",
@@ -731,7 +713,8 @@
       "checked": "2026-09-29",
       "scope": [
         "geo"
-      ]
+      ],
+      "requires": "articlePages"
     },
     {
       "id": "YAHOO-01",
@@ -772,7 +755,8 @@
       "checked": "2026-09-29",
       "scope": [
         "geo"
-      ]
+      ],
+      "requires": "accessLog"
     },
     {
       "id": "GEO-09",
@@ -790,7 +774,8 @@
       "checked": "2026-09-29",
       "scope": [
         "geo"
-      ]
+      ],
+      "requires": "accessLog"
     },
     {
       "id": "GEO-10",
@@ -806,7 +791,8 @@
       "checked": "2026-09-29",
       "scope": [
         "geo"
-      ]
+      ],
+      "requires": "accessLog"
     },
     {
       "id": "GEO-11",
@@ -838,7 +824,8 @@
       "checked": "2026-09-29",
       "scope": [
         "geo"
-      ]
+      ],
+      "requires": "articlePages"
     },
     {
       "id": "GEO-13",

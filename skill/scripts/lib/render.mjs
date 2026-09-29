@@ -21,7 +21,7 @@ export function renderScan(result, facts, opts = {}) {
   if (facts.urlFrom && facts.urlFrom !== '--url') L.push(`Target ${facts.urlFrom}. Pass --url to override.`, '');
   const es = enginesSentence(facts.engines);
   if (es.length) L.push(...es, '');
-  L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked   ⏭ ${c.skipped} skipped` + (c.info ? `   · ${c.info} note` : ''), '');
+  L.push(`✅ ${c.pass} pass   ⚠️ ${c.warn} warn   ❌ ${c.fail} fail   ? ${c.unknown} unchecked` + (c.info ? `   · ${c.info} note` : '') + (c.skipped ? `   ⏭ ${c.skipped} skipped` : '') + (c.notApplicable ? `   n/a ${c.notApplicable}` : ''), '');
 
   // Crawler activity is the point even when it passes, so it gets its own block.
   // A verdict alone ("fine") throws away the only hard evidence we have for GEO.
@@ -72,6 +72,18 @@ export function renderScan(result, facts, opts = {}) {
       L.push(`⏭ ${ids.length} optional ${ENGINE_LABEL[eng] || eng} items hidden (${ids.join(' · ')}) — add it with --engines to see them`);
     }
     L.push('');
+  }
+
+  // Not applicable is not "unchecked". One line each, grouped by reason.
+  if (result.notApplicable?.length) {
+    const byWhy = {};
+    for (const n of result.notApplicable) (byWhy[n.why] ||= []).push(n.id);
+    for (const [why, ids] of Object.entries(byWhy)) L.push(`n/a ${ids.join(' · ')} — ${why}`);
+    L.push('');
+  }
+
+  if (result.completed?.length) {
+    L.push(`✔ ${result.completed.length} marked done by you (${result.completed.join(' · ')})`, '');
   }
 
   if (c.outOfScope) {

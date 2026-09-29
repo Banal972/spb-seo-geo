@@ -7,6 +7,7 @@ const ENGINE_ORDER = ['google', 'bing', 'core', 'ai', 'naver', 'yahoo'];
 const ENGINE_LABEL = { naver: 'Naver', google: 'Google', bing: 'Bing', core: 'Common', ai: 'AI search', yahoo: 'Yahoo' };
 const OPT_LABEL = { naver: 'Naver (Korea)', yahoo: 'Yahoo! JAPAN (Japan)' };
 const OPT_NOTE = { naver: 'do these in order or they will not take effect' };
+const DONE_HINT = 'Already done any of these? Silence it with --done <ID>';
 
 const args = parseArgs();
 
@@ -64,7 +65,7 @@ try {
       const group = regional.filter((i) => i.region === eng);
       if (group.length) {
         print(group, `  ${OPT_LABEL[eng]}`, OPT_NOTE[eng]);
-        if (eng === 'naver') L.push('     ⏳ After submitting the sitemap, indexing takes about two weeks — not appearing during that window is normal', '');
+
       } else if (eng === 'yahoo' && showYahoo) {
         // Answering "yes, Yahoo" must produce something, or it was a fake question.
         // What it produces is the answer: there is nothing to register, and here is why.
@@ -78,6 +79,7 @@ try {
     }
   }
 
+  if (items.some((i) => /Already done\?/.test(i.note || ''))) L.push(DONE_HINT, '');
   L.push(`Verified or handled automatically: ${result.counts.pass}`);
   if (auto) L.push(`Still autofixable: ${auto} → apply`);
   out(L.join('\n'));

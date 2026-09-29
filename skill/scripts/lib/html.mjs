@@ -68,9 +68,18 @@ export function parseHtml(html = '') {
     lang: (htmlTag.lang || '').toLowerCase(),
     title, meta, property, canonical, feeds, hreflangs,
     text, textLen: text.length, imgs, lists, anchors, jsonLd,
-    robotsMeta, hasDataNosnippet, headings, timeTags,
+    robotsMeta, hasDataNosnippet, headings, timeTags, isArticle: articleLike(html, bodySrc),
     scripts: (html.match(/<script\b[^>]*src\s*=\s*["']([^"']+)["']/gi) || []).join(' '),
   };
+}
+
+// Is this a page where a publication date and structured prose actually mean something?
+// A landing page has neither and should not be judged as if it were a blog post.
+function articleLike(html, body) {
+  if (/<article[\s>]/i.test(body)) return true;
+  if (/"@type"\s*:\s*"?(Article|BlogPosting|NewsArticle|TechArticle|Report)/i.test(html)) return true;
+  if (/property\s*=\s*["']og:type["'][^>]*content\s*=\s*["']article["']/i.test(html)) return true;
+  return false;
 }
 
 // Script ratios. The most reliable signals for suggesting optional engines, because unlike a

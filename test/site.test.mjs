@@ -62,7 +62,7 @@ test('--only splits the catalog and says nothing is lost silently', () => {
   const seo = partitionByScope(rules, 'seo');
   const geo = partitionByScope(rules, 'geo');
   assert.equal(seo.active.length, 30);
-  assert.equal(geo.active.length, 25);
+  assert.equal(geo.active.length, 24);
   assert.equal(seo.active.length + seo.skipped.length, rules.length);
   // Infrastructure that gates both must appear in both
   for (const id of ['CORE-01', 'CORE-03', 'GOOGLE-03', 'CORE-12']) {

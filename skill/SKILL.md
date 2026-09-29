@@ -23,7 +23,7 @@ node <DIR>/scripts/scan.mjs
 
 No flags. It finds the site URL from the project — framework config, `package.json` `homepage`, `public/CNAME`, `.env*`, an existing `sitemap.xml`/`robots.txt` — plus an access log if one sits in the repo. The report says where the URL came from. **Ask for the URL only if it was not found.**
 
-Narrow it when the user cares about one side only: `--only seo` (30 rules) · `--only geo` (25) · default both (45). Whatever `--only` leaves out is stated, never silently dropped.
+Narrow it when the user cares about one side only: `--only seo` (30 rules) · `--only geo` (24) · default both (44). Whatever `--only` leaves out is stated, never silently dropped.
 
 ## Ask only for what unlocks something
 
@@ -75,6 +75,8 @@ Needs Node 20+; if missing, say so in one line and stop.
 | `❌` critical | **always explain.** Something is blocking visibility |
 | `?` unchecked | **not a pass.** Say why it could not be checked |
 | `⏭` hidden | one line; never drop it silently |
+| `n/a` | does not apply here (no access log, or not an article site). **Not a defect — do not present it as one** |
+| `✔` | the user already told us it was done |
 
 `[evidence: primary]` = official engine docs · `secondary` = research/measurement · `low` = correlation only. **Relay the grade as given.**
 
@@ -91,6 +93,12 @@ Every rule runs for every site — allowing a crawler costs nothing, so nothing 
 ## GEO is measured, not assumed
 
 With an access log the report prints an **AI crawler activity** block: which citation bots fetched the site and when, plus whether a real person arrived through an AI product (`ChatGPT-User` and friends — the strongest evidence there is). Relay that block; it is the hardest data in the report. `citation none` means nothing can cite the site however good the content is — lead with it.
+
+## Do not nag
+
+- Console registration (`GOOGLE-07`, `BING-03`, `NAVER-04`) **cannot be checked from outside** — the user may well have done it already. Phrase it as "if you have not yet", and when they say it is done, run `--done GOOGLE-07,BING-03` once; it is saved and never raised again.
+- `n/a` items are not findings. Do not list them as work.
+- Do not volunteer timelines, caveats or background the user did not ask for. Report what was found and what to do.
 
 ## The two that come up most
 
